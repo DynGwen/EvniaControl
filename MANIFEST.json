@@ -1,0 +1,20 @@
+{
+  "name": "Evnia Control",
+  "version": "1.0.20 English",
+  "base_code": "1.0.0",
+  "accepted_state_reapplied": "1.0.19 PersistenceFix",
+  "change_only": "English localization of all user-visible strings",
+  "functional_logic_changed": false,
+  "language": "English",
+  "preserved": [
+    "Magic Keyboard 5% steps",
+    "Option+Shift 1% fine step",
+    "brightness/volume/attenuation persistence",
+    "Core Audio attenuation -60..0 dB",
+    "3 dB attenuation step",
+    "full-width attenuation slider",
+    "application icon",
+    "automatic refresh",
+    "manual Refresh remains removed"
+  ]
+}
