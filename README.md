@@ -282,12 +282,3 @@ Evnia Control is installed for the current user only:
 ```
 
 No Homebrew installation is required for normal use.
-
----
-
-## Version
-
-```text
-Evnia Control 1.0.20
-English
-```
