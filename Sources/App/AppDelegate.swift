@@ -22,22 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         workspaceNotifications.addObserver(
             self,
-            selector: #selector(systemWillSleep),
-            name: NSWorkspace.willSleepNotification,
-            object: nil
-        )
-
-        workspaceNotifications.addObserver(
-            self,
             selector: #selector(systemDidWake),
             name: NSWorkspace.didWakeNotification,
-            object: nil
-        )
-
-        workspaceNotifications.addObserver(
-            self,
-            selector: #selector(screensDidSleep),
-            name: NSWorkspace.screensDidSleepNotification,
             object: nil
         )
 
@@ -56,20 +42,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 nanoseconds: 700_000_000
             )
             await AppModel.shared.refresh()
-        }
-    }
-
-    @objc
-    private func systemWillSleep() {
-        Task { @MainActor in
-            AppModel.shared.prepareForScreenSleep()
-        }
-    }
-
-    @objc
-    private func screensDidSleep() {
-        Task { @MainActor in
-            AppModel.shared.prepareForScreenSleep()
         }
     }
 

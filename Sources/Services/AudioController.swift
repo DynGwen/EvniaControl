@@ -103,14 +103,10 @@ final class AudioController {
         )
     }
 
-    func suspendForScreenSleep() {
-        // CoreAudioTapKit mutes the original tapped stream while the
-        // attenuation engine is running. If the display audio device
-        // disappears during screen sleep, leaving the tap alive can
-        // therefore leave the system with silence and no valid output.
-        //
-        // Stop only the engine here. Keep preferredOutputUID so the
-        // same physical output can be selected again after wake.
+    func prepareForWakeRestart() {
+        // Important: do this AFTER wake, never while the display audio
+        // device is disappearing. This follows the lifecycle used by
+        // the working 0.2.7 implementation: full stop, then rebuild.
         stopEngine(
             resetPreferredOutput: false,
             resetProcessorGain: false

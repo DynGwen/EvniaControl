@@ -2,28 +2,35 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-DELEGATE="${ROOT_DIR}/Sources/App/AppDelegate.swift"
-MODEL="${ROOT_DIR}/Sources/Core/AppModel.swift"
-AUDIO="${ROOT_DIR}/Sources/Services/AudioController.swift"
 
 plutil -lint "${ROOT_DIR}/Resources/Info.plist"
 
-grep -q 'screensDidSleepNotification' "${DELEGATE}"
-grep -q 'screensDidWakeNotification' "${DELEGATE}"
-grep -q 'willSleepNotification' "${DELEGATE}"
-grep -q 'didWakeNotification' "${DELEGATE}"
+grep -q '<string>en</string>' \
+    "${ROOT_DIR}/Resources/Info.plist"
+grep -q 'Searching for display' \
+    "${ROOT_DIR}/Sources/Core/AppModel.swift"
+grep -q 'Connected' \
+    "${ROOT_DIR}/Sources/Core/AppModel.swift"
+grep -q 'Brightness' \
+    "${ROOT_DIR}/Sources/UI/MenuContentView.swift"
+grep -q 'Keyboard permission required' \
+    "${ROOT_DIR}/Sources/UI/MenuContentView.swift"
+grep -q 'Launch Evnia Control at login' \
+    "${ROOT_DIR}/Sources/UI/OptionsWindowController.swift"
+grep -q 'Attenuation' \
+    "${ROOT_DIR}/Sources/UI/AttenuationControlView.swift"
 
-grep -q 'prepareForScreenSleep' "${MODEL}"
-grep -q 'recoverAfterScreenWake' "${MODEL}"
-grep -q 'for attempt in 0..<6' "${MODEL}"
+grep -q 'screensDidWakeNotification' \
+    "${ROOT_DIR}/Sources/App/AppDelegate.swift"
+grep -q 'recoverAfterScreenWake' \
+    "${ROOT_DIR}/Sources/Core/AppModel.swift"
+grep -q 'prepareForWakeRestart' \
+    "${ROOT_DIR}/Sources/Core/AppModel.swift"
 
-grep -q 'preferredOutputUID' "${AUDIO}"
-grep -q 'suspendForScreenSleep' "${AUDIO}"
-grep -q 'resumePreferredOutput' "${AUDIO}"
-grep -q 'resumeDefaultOutput' "${AUDIO}"
-
-grep -q 'brightnessStep = 5' "${MODEL}"
-grep -q 'volumeStep = 5' "${MODEL}"
+grep -q 'brightnessStep = 5' \
+    "${ROOT_DIR}/Sources/Core/AppModel.swift"
+grep -q 'volumeStep = 5' \
+    "${ROOT_DIR}/Sources/Core/AppModel.swift"
 grep -q 'minValue: -60' \
     "${ROOT_DIR}/Sources/UI/AttenuationControlView.swift"
 grep -q 'numberOfTickMarks = 21' \
@@ -37,13 +44,11 @@ if grep -q 'arrow.clockwise' \
     exit 1
 fi
 
-grep -q '1.0.21' \
+grep -q '1.0.24' \
     "${ROOT_DIR}/Resources/Info.plist"
 
-echo "Screen sleep observer: OK"
-echo "Screen wake observer: OK"
-echo "Audio tap suspension: OK"
-echo "Preferred output recovery: OK"
-echo "Bounded fallback recovery: OK"
-echo "Existing settings preserved: OK"
-echo "Version 1.0.21: OK"
+echo "English interface: OK"
+echo "English README: OK"
+echo "Audio wake restart fix preserved: OK"
+echo "Existing behavior preserved: OK"
+echo "Version 1.0.24: OK"

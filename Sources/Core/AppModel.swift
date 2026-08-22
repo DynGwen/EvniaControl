@@ -326,21 +326,20 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func prepareForScreenSleep() {
-        audioRecoveryTask?.cancel()
-        audioRecoveryTask = nil
-        audio.suspendForScreenSleep()
-    }
-
     func recoverAfterScreenWake() {
         audioRecoveryTask?.cancel()
 
         audioRecoveryTask = Task { @MainActor in
-            // Give the display's audio device a short initial window
-            // to re-register with Core Audio.
-            try? await Task.sleep(
-                nanoseconds: 800_000_000
-            )
+            // Same initial wake delay used by the working 0.2.7
+            // implementation. Let Core Audio rebuild its device list
+            // before touching the tap.
+            do {
+                try await Task.sleep(
+                    nanoseconds: 750_000_000
+                )
+            } catch {
+                return
+            }
 
             guard !Task.isCancelled else {
                 return
@@ -352,19 +351,28 @@ final class AppModel: ObservableObject {
                 return
             }
 
+            // Critical change from 1.0.21/1.0.22:
+            // tear down the old Core Audio tap only AFTER wake.
+            AppModel.shared.audio
+                .prepareForWakeRestart()
+
             var lastError: Error?
 
-            // Six bounded attempts, one second apart. This is wake-only
-            // recovery, not permanent polling.
-            for attempt in 0..<6 {
+            // The display audio endpoint can reappear slightly after the
+            // screen itself. Retry the rebuild for a bounded period.
+            for attempt in 0..<8 {
                 guard !Task.isCancelled else {
                     return
                 }
 
                 if attempt > 0 {
-                    try? await Task.sleep(
-                        nanoseconds: 1_000_000_000
-                    )
+                    do {
+                        try await Task.sleep(
+                            nanoseconds: 750_000_000
+                        )
+                    } catch {
+                        return
+                    }
                 }
 
                 do {
@@ -386,10 +394,12 @@ final class AppModel: ObservableObject {
                 }
             }
 
-            // The previous output did not return in time. Fall back to
-            // whichever output macOS currently exposes so audio does
-            // not remain silent.
+            // Last resort: rebuild on the current macOS output so the
+            // global tap cannot leave the system silent.
             do {
+                AppModel.shared.audio
+                    .prepareForWakeRestart()
+
                 try AppModel.shared.audio
                     .resumeDefaultOutput(
                         decibels:

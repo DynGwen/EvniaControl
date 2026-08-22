@@ -1,14 +1,14 @@
 # Evnia Control
 
-**Evnia Control 1.0.21** is a lightweight macOS menu bar application for controlling a Philips Evnia display from a Mac.
+**Evnia Control 1.0.24** is a lightweight macOS menu bar application for controlling a Philips Evnia display from a Mac.
 
-It provides direct control of display brightness and hardware volume through DDC/CI, supports Magic Keyboard media keys, and adds optional software audio attenuation for monitors whose minimum volume is still too loud.
+It provides direct brightness and hardware-volume control through DDC/CI, supports Magic Keyboard media keys, and adds optional software audio attenuation for monitors whose minimum volume is still too loud.
 
 ---
 
 ## Features
 
-- Philips Evnia display auto-detection
+- Automatic Philips Evnia display detection
 - Brightness control through DDC/CI
 - Hardware volume control through DDC/CI
 - Mute control
@@ -21,6 +21,7 @@ It provides direct control of display brightness and hardware volume through DDC
 - 3 dB attenuation steps
 - Persistent brightness, volume and attenuation settings
 - Automatic refresh after launch, display changes and wake
+- Automatic audio recovery after display sleep
 - Launch at login
 - Native macOS menu bar interface
 - Native application icon
@@ -46,12 +47,10 @@ The installer downloads and builds the required open-source components:
 
 ### 1. Extract the archive
 
-Unzip the downloaded archive.
-
-Open the extracted folder:
+Unzip the downloaded archive and open:
 
 ```text
-Evnia-Control-1.0.20-English
+Evnia-Control-1.0.24-English
 ```
 
 ### 2. Run the installer
@@ -62,11 +61,11 @@ Double-click:
 install.command
 ```
 
-The installer will:
+The installer will automatically:
 
-1. stop any existing Evnia Control process;
+1. stop any running Evnia Control instance;
 2. build Evnia Control;
-3. build the Core Audio attenuation component;
+3. build the Core Audio attenuation engine;
 4. download and build `m1ddc`;
 5. generate the application icon;
 6. locally sign the application;
@@ -78,13 +77,13 @@ The installer will:
 
 8. launch Evnia Control.
 
-### 3. If macOS blocks the installer
+### 3. If macOS blocks install.command
 
 Open:
 
 **System Settings → Privacy & Security**
 
-Scroll to the security section and allow `install.command` to run.
+Allow `install.command` to run, then launch it again.
 
 You can also run it from Terminal:
 
@@ -93,7 +92,7 @@ chmod +x install.command
 ./install.command
 ```
 
-If Apple Command Line Tools are missing, macOS will prompt you to install them. After installation, run `install.command` again.
+If Apple Command Line Tools are missing, macOS will offer to install them. Run `install.command` again afterward.
 
 ---
 
@@ -109,7 +108,7 @@ The main panel provides:
 - Options
 - Quit
 
-There is no manual Refresh button. Display state is refreshed automatically.
+There is no manual Refresh button. Refresh is automatic.
 
 ---
 
@@ -125,33 +124,23 @@ Enable:
 
 **Evnia Control**
 
-This permission is required for:
-
-- brightness up / down;
-- volume up / down;
-- mute.
-
 Normal adjustments use 5% steps.
 
-For fine adjustments, hold:
+Hold:
 
 ```text
 Option + Shift
 ```
 
-The adjustment step becomes 1%.
-
-If media keys do not respond immediately after granting permission, quit and reopen Evnia Control.
+for 1% fine adjustments.
 
 ---
 
 ## Audio Attenuation
 
-Some monitors remain too loud even at very low hardware volume.
-
 Evnia Control can apply additional software attenuation through Core Audio.
 
-Available range:
+Range:
 
 ```text
 −60 dB → 0 dB
@@ -163,18 +152,34 @@ Step:
 3 dB
 ```
 
-Meaning:
-
-- `0 dB` — no additional attenuation
-- `−3 dB` — slightly quieter
+- `0 dB` — no attenuation
+- `−3 dB` — light attenuation
 - `−30 dB` — strong attenuation
 - `−60 dB` — maximum attenuation
 
-The attenuation control is available in:
+The control is available in:
 
 **Evnia Control → Options…**
 
-The first time attenuation is enabled, macOS may request permission to capture system audio. This permission is required for the Core Audio attenuation engine.
+The first activation may require System Audio Recording permission.
+
+---
+
+## Audio Recovery After Display Sleep
+
+When the Evnia display goes to sleep, its audio device can temporarily disappear from Core Audio.
+
+Evnia Control does **not** tear down the audio tap while the display is going to sleep.
+
+After wake:
+
+1. the application waits 750 ms;
+2. it completely stops the old Core Audio engine;
+3. it rebuilds the tap on the previously used audio output;
+4. if the Evnia output has not returned yet, it retries for a bounded period;
+5. as a last resort, it rebuilds the engine on the currently available macOS output so the system does not remain silent.
+
+This recovery runs only after wake and does not add permanent polling.
 
 ---
 
@@ -186,9 +191,9 @@ Open:
 
 Available settings:
 
-### Launch at Login
+### Launch Evnia Control at Login
 
-Automatically starts Evnia Control when you sign in to macOS.
+Starts Evnia Control automatically when you sign in to macOS.
 
 ### Audio Attenuation
 
@@ -206,18 +211,16 @@ Evnia Control remembers:
 
 These values are restored after the application is restarted.
 
-Saved brightness and volume remain authoritative during startup, preventing temporary DDC readings from replacing the user's stored settings.
-
 ---
 
 ## Automatic Refresh
 
 Evnia Control refreshes display state automatically:
 
-- when the application starts;
+- at launch;
 - every 30 seconds;
-- after the display configuration changes;
-- after the Mac wakes from sleep.
+- after display configuration changes;
+- after wake.
 
 ---
 
@@ -227,9 +230,9 @@ Brightness and hardware volume require DDC/CI.
 
 Make sure DDC/CI is enabled in the Philips Evnia monitor settings.
 
-If brightness or volume does not respond:
+If brightness or volume stops responding:
 
-1. verify that DDC/CI is enabled;
+1. confirm DDC/CI is enabled;
 2. disconnect and reconnect the monitor;
 3. quit Evnia Control;
 4. reopen Evnia Control.
@@ -244,9 +247,9 @@ To install a newer version:
 2. extract the new archive;
 3. run the new `install.command`.
 
-The installer automatically replaces the existing application.
+The installer replaces the previous version automatically.
 
-User settings are stored separately by macOS and are preserved between versions.
+User settings are stored separately in macOS preferences and are preserved.
 
 ---
 
@@ -258,11 +261,11 @@ Quit Evnia Control and delete:
 ~/Applications/Evnia Control.app
 ```
 
-You can also remove it from:
+You can also disable launch at login in:
 
 **System Settings → General → Login Items**
 
-Optional permissions can be removed from:
+Permissions can be removed in:
 
 **System Settings → Privacy & Security**
 
@@ -273,42 +276,9 @@ including:
 
 ---
 
-## Installation Location
-
-Evnia Control is installed for the current user only:
-
-```text
-~/Applications/Evnia Control.app
-```
-
-No Homebrew installation is required for normal use.
-
-
----
-
-## Screen Sleep and Audio Recovery
-
-When the Evnia display goes to sleep, its audio device can temporarily
-disappear from Core Audio.
-
-Evnia Control now handles this automatically:
-
-1. the software attenuation engine is released when the screen sleeps;
-2. the previously used audio-output UID is remembered;
-3. when the screen wakes, Evnia Control waits for that output to return;
-4. the attenuation engine is rebuilt on the same output;
-5. if the previous output does not return after bounded retries, Evnia Control
-   falls back to the currently available macOS output instead of leaving the
-   system silent.
-
-This recovery runs only after screen/system wake. It does not add permanent
-high-frequency polling.
-
----
-
 ## Version
 
 ```text
-Evnia Control 1.0.21
+Evnia Control 1.0.24
 English
 ```

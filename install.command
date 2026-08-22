@@ -21,7 +21,7 @@ fail() {
 }
 
 if [[ "$(uname -m)" != "arm64" ]]; then
-    fail "Evnia Control 1.0.21 requires an Apple Silicon Mac."
+    fail "Evnia Control 1.0.24 requires an Apple Silicon Mac."
 fi
 
 if ! xcode-select -p >/dev/null 2>&1; then
