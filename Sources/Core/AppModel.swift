@@ -56,6 +56,8 @@ final class AppModel: ObservableObject {
             "monitorState.brightness"
         static let savedVolume =
             "monitorState.volume"
+        static let savedMuted =
+            "monitorState.muted"
     }
 
     private let defaults = UserDefaults.standard
@@ -106,6 +108,10 @@ final class AppModel: ObservableObject {
                 forKey: Keys.attenuationDB
             ) as? Int ?? 0
         )
+
+        isMuted = storedDefaults.object(
+            forKey: Keys.savedMuted
+        ) as? Bool ?? false
 
         // All required stored properties are initialized above.
         lastAudibleVolume = restoredVolume > 0
@@ -175,7 +181,24 @@ final class AppModel: ObservableObject {
                 )
             }
 
-            if hasSavedVolume {
+            if isMuted {
+                // Mute is authoritative until the user explicitly
+                // chooses Unmute. Never restore a non-zero hardware
+                // volume from an automatic refresh while muted.
+                do {
+                    try await driver.setMute(true)
+                } catch {
+                    // Some displays do not implement VCP mute reliably.
+                    // Volume 0 is the fail-safe mute state.
+                }
+
+                do {
+                    try await driver.setVolume(0)
+                } catch {
+                    statusMessage =
+                        error.localizedDescription
+                }
+            } else if hasSavedVolume {
                 if snapshot.volume != volume {
                     do {
                         try await driver.setVolume(
@@ -183,7 +206,7 @@ final class AppModel: ObservableObject {
                         )
                     } catch {
                         // Never replace the saved volume with a transient
-                        // DDC value. Retry on the next refresh instead.
+                        // DDC value. Retry on the next automatic refresh.
                         statusMessage =
                             error.localizedDescription
                     }
@@ -196,9 +219,8 @@ final class AppModel: ObservableObject {
                 )
             }
 
-            if volume > 0 {
+            if !isMuted && volume > 0 {
                 lastAudibleVolume = volume
-                isMuted = false
             }
         } catch {
             isConnected = false
@@ -224,10 +246,18 @@ final class AppModel: ObservableObject {
             volume,
             forKey: Keys.savedVolume
         )
+
         if volume > 0 {
             lastAudibleVolume = volume
-            isMuted = false
         }
+
+        guard !isMuted else {
+            // While muted, update only the desired volume. It will be
+            // applied when the user explicitly unmutes.
+            volumeWriteTask?.cancel()
+            return
+        }
+
         scheduleVolumeWrite()
     }
 
@@ -241,53 +271,81 @@ final class AppModel: ObservableObject {
     }
 
     func changeVolume(by delta: Int) {
-        if isMuted && delta > 0 {
-            isMuted = false
-            volume = max(lastAudibleVolume, volumeStep)
-        } else {
-            volume = clamp(volume + delta)
-        }
+        volume = clamp(volume + delta)
 
         if volume > 0 {
             lastAudibleVolume = volume
-            isMuted = false
         }
 
         persist(
             volume,
             forKey: Keys.savedVolume
         )
+
+        guard !isMuted else {
+            // Media-key volume changes adjust the desired level but
+            // cannot implicitly unmute the display.
+            volumeWriteTask?.cancel()
+            return
+        }
+
         scheduleVolumeWrite()
     }
 
     func toggleMute() {
         let targetMuted = !isMuted
 
-        if targetMuted && volume > 0 {
-            lastAudibleVolume = volume
+        if targetMuted {
+            if volume > 0 {
+                lastAudibleVolume = volume
+            }
+
+            // Prevent a delayed non-zero volume write from racing with
+            // the mute command.
+            volumeWriteTask?.cancel()
+            volumeWriteTask = nil
+
+            isMuted = true
+            persistMuteState()
+
+            Task {
+                // Try the monitor's real mute command first.
+                try? await driver.setMute(true)
+
+                // Always force hardware volume to zero as a fail-safe.
+                // The desired volume remains stored in `volume`.
+                try? await driver.setVolume(0)
+            }
+
+            return
         }
 
-        isMuted = targetMuted
+        isMuted = false
+        persistMuteState()
+
+        let restore = max(
+            volume > 0 ? volume : lastAudibleVolume,
+            volumeStep
+        )
+
+        volume = clamp(restore)
+        lastAudibleVolume = volume
+        persist(
+            volume,
+            forKey: Keys.savedVolume
+        )
 
         Task {
+            // Clear hardware mute if the display supports it, then
+            // restore the desired volume in all cases.
+            try? await driver.setMute(false)
+
             do {
-                try await driver.setMute(targetMuted)
+                try await driver.setVolume(volume)
+                statusMessage = "Connected"
             } catch {
-                // Compatibility fallback for displays that ignore VCP mute.
-                if targetMuted {
-                    try? await driver.setVolume(0)
-                } else {
-                    let restore = max(
-                        lastAudibleVolume,
-                        volumeStep
-                    )
-                    volume = restore
-                    persist(
-                        restore,
-                        forKey: Keys.savedVolume
-                    )
-                    try? await driver.setVolume(restore)
-                }
+                statusMessage =
+                    error.localizedDescription
             }
         }
     }
@@ -476,6 +534,14 @@ final class AppModel: ObservableObject {
                 statusMessage = error.localizedDescription
             }
         }
+    }
+
+    private func persistMuteState() {
+        defaults.set(
+            isMuted,
+            forKey: Keys.savedMuted
+        )
+        defaults.synchronize()
     }
 
     private func persist(

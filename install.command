@@ -7,8 +7,9 @@ ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORK_DIR="${ROOT_DIR}/.installer-build"
 VENDOR_DIR="${WORK_DIR}/vendor"
 APP_BUNDLE="${WORK_DIR}/${APP_NAME}.app"
-INSTALL_DIR="${HOME}/Applications"
+INSTALL_DIR="/Applications"
 INSTALL_APP="${INSTALL_DIR}/${APP_NAME}.app"
+LEGACY_INSTALL_APP="${HOME}/Applications/${APP_NAME}.app"
 M1DDC_DIR="${VENDOR_DIR}/m1ddc"
 
 log() {
@@ -21,7 +22,7 @@ fail() {
 }
 
 if [[ "$(uname -m)" != "arm64" ]]; then
-    fail "Evnia Control 1.0.24 requires an Apple Silicon Mac."
+    fail "Evnia Control 1.0.25 requires an Apple Silicon Mac."
 fi
 
 if ! xcode-select -p >/dev/null 2>&1; then
@@ -100,9 +101,25 @@ codesign \
     --sign - \
     "${APP_BUNDLE}" >/dev/null
 
-mkdir -p "${INSTALL_DIR}"
-rm -rf "${INSTALL_APP}"
-ditto "${APP_BUNDLE}" "${INSTALL_APP}"
+log "Installing in /Applications..."
+osascript - "${APP_BUNDLE}" "${INSTALL_APP}" <<'APPLESCRIPT'
+on run argv
+    set sourceApp to item 1 of argv
+    set destinationApp to item 2 of argv
+
+    do shell script ¬
+        "/bin/rm -rf " & quoted form of destinationApp & ¬
+        " && /usr/bin/ditto " & quoted form of sourceApp & ¬
+        " " & quoted form of destinationApp ¬
+        with administrator privileges
+end run
+APPLESCRIPT
+
+# Remove the obsolete per-user copy created by older installers.
+if [[ -d "${LEGACY_INSTALL_APP}" ]]; then
+    log "Removing legacy user-level installation..."
+    rm -rf "${LEGACY_INSTALL_APP}"
+fi
 
 log "Installation complete: ${INSTALL_APP}"
 log "Launching..."

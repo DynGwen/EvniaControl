@@ -1,6 +1,6 @@
 # Evnia Control
 
-**Evnia Control 1.0.24** is a lightweight macOS menu bar application for controlling a Philips Evnia display from a Mac.
+**Evnia Control 1.0.25** is a lightweight macOS menu bar application for controlling a Philips Evnia display from a Mac.
 
 It provides direct brightness and hardware-volume control through DDC/CI, supports Magic Keyboard media keys, and adds optional software audio attenuation for monitors whose minimum volume is still too loud.
 
@@ -12,6 +12,7 @@ It provides direct brightness and hardware-volume control through DDC/CI, suppor
 - Brightness control through DDC/CI
 - Hardware volume control through DDC/CI
 - Mute control
+- Persistent mute state: only explicit Mute/Unmute changes it
 - Magic Keyboard brightness keys
 - Magic Keyboard volume keys
 - Magic Keyboard mute key
@@ -50,7 +51,7 @@ The installer downloads and builds the required open-source components:
 Unzip the downloaded archive and open:
 
 ```text
-Evnia-Control-1.0.24-English
+Evnia-Control-1.0.25-MuteInstallFix
 ```
 
 ### 2. Run the installer
@@ -72,10 +73,14 @@ The installer will automatically:
 7. install it to:
 
 ```text
-~/Applications/Evnia Control.app
+/Applications/Evnia Control.app
 ```
 
 8. launch Evnia Control.
+
+Installation in `/Applications` uses the standard macOS administrator
+authorization dialog. Older versions installed in
+`~/Applications/Evnia Control.app` are removed after a successful install.
 
 ### 3. If macOS blocks install.command
 
@@ -207,7 +212,12 @@ Evnia Control remembers:
 
 - brightness;
 - volume;
+- mute state;
 - audio attenuation.
+
+Mute is sticky: automatic refresh, mouse volume changes and Magic Keyboard
+volume changes do not unmute the display. Only the explicit Mute/Unmute
+command changes the mute state.
 
 These values are restored after the application is restarted.
 
@@ -258,7 +268,7 @@ User settings are stored separately in macOS preferences and are preserved.
 Quit Evnia Control and delete:
 
 ```text
-~/Applications/Evnia Control.app
+/Applications/Evnia Control.app
 ```
 
 You can also disable launch at login in:
@@ -279,6 +289,6 @@ including:
 ## Version
 
 ```text
-Evnia Control 1.0.24
+Evnia Control 1.0.25
 English
 ```

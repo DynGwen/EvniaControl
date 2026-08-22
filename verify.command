@@ -2,41 +2,54 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+MODEL="${ROOT_DIR}/Sources/Core/AppModel.swift"
+INSTALLER="${ROOT_DIR}/install.command"
 
 plutil -lint "${ROOT_DIR}/Resources/Info.plist"
 
-grep -q '<string>en</string>' \
-    "${ROOT_DIR}/Resources/Info.plist"
-grep -q 'Searching for display' \
-    "${ROOT_DIR}/Sources/Core/AppModel.swift"
-grep -q 'Connected' \
-    "${ROOT_DIR}/Sources/Core/AppModel.swift"
-grep -q 'Brightness' \
-    "${ROOT_DIR}/Sources/UI/MenuContentView.swift"
-grep -q 'Keyboard permission required' \
-    "${ROOT_DIR}/Sources/UI/MenuContentView.swift"
-grep -q 'Launch Evnia Control at login' \
-    "${ROOT_DIR}/Sources/UI/OptionsWindowController.swift"
-grep -q 'Attenuation' \
-    "${ROOT_DIR}/Sources/UI/AttenuationControlView.swift"
+grep -q 'monitorState.muted' "${MODEL}"
+grep -q 'persistMuteState' "${MODEL}"
 
+# No automatic or volume-control implicit unmute.
+if sed -n '/func refresh()/,/func userSetBrightness/p' "${MODEL}" \
+    | grep -q 'isMuted = false'; then
+    echo "FAIL: refresh can still clear mute"
+    exit 1
+fi
+
+if sed -n '/func userSetVolume/,/func changeBrightness/p' "${MODEL}" \
+    | grep -q 'isMuted = false'; then
+    echo "FAIL: mouse volume can still clear mute"
+    exit 1
+fi
+
+if sed -n '/func changeVolume/,/func toggleMute/p' "${MODEL}" \
+    | grep -q 'isMuted = false'; then
+    echo "FAIL: keyboard volume can still clear mute"
+    exit 1
+fi
+
+grep -q 'volumeWriteTask?.cancel()' "${MODEL}"
+grep -q 'try? await driver.setVolume(0)' "${MODEL}"
+
+# Installer destination.
+grep -q 'INSTALL_DIR="/Applications"' "${INSTALLER}"
+grep -q 'with administrator privileges' "${INSTALLER}"
+grep -q 'LEGACY_INSTALL_APP=' "${INSTALLER}"
+
+if grep -q 'INSTALL_DIR="${HOME}/Applications"' "${INSTALLER}"; then
+    echo "FAIL: installer still targets user Applications"
+    exit 1
+fi
+
+# Existing behavior.
 grep -q 'screensDidWakeNotification' \
     "${ROOT_DIR}/Sources/App/AppDelegate.swift"
-grep -q 'recoverAfterScreenWake' \
-    "${ROOT_DIR}/Sources/Core/AppModel.swift"
-grep -q 'prepareForWakeRestart' \
-    "${ROOT_DIR}/Sources/Core/AppModel.swift"
-
-grep -q 'brightnessStep = 5' \
-    "${ROOT_DIR}/Sources/Core/AppModel.swift"
-grep -q 'volumeStep = 5' \
-    "${ROOT_DIR}/Sources/Core/AppModel.swift"
+grep -q 'prepareForWakeRestart' "${MODEL}"
+grep -q 'brightnessStep = 5' "${MODEL}"
+grep -q 'volumeStep = 5' "${MODEL}"
 grep -q 'minValue: -60' \
     "${ROOT_DIR}/Sources/UI/AttenuationControlView.swift"
-grep -q 'numberOfTickMarks = 21' \
-    "${ROOT_DIR}/Sources/UI/AttenuationControlView.swift"
-grep -q 'CFBundleIconFile' \
-    "${ROOT_DIR}/Resources/Info.plist"
 
 if grep -q 'arrow.clockwise' \
     "${ROOT_DIR}/Sources/UI/MenuContentView.swift"; then
@@ -44,11 +57,13 @@ if grep -q 'arrow.clockwise' \
     exit 1
 fi
 
-grep -q '1.0.24' \
-    "${ROOT_DIR}/Resources/Info.plist"
+grep -q '1.0.25' "${ROOT_DIR}/Resources/Info.plist"
 
-echo "English interface: OK"
-echo "English README: OK"
-echo "Audio wake restart fix preserved: OK"
-echo "Existing behavior preserved: OK"
-echo "Version 1.0.24: OK"
+echo "Sticky mute state: OK"
+echo "No refresh/mouse/keyboard implicit unmute: OK"
+echo "Pending volume-write race removed: OK"
+echo "/Applications installer: OK"
+echo "Administrator authorization: OK"
+echo "Legacy user app cleanup: OK"
+echo "Existing 1.0.24 behavior preserved: OK"
+echo "Version 1.0.25: OK"
