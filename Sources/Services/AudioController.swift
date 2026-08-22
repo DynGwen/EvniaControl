@@ -59,6 +59,10 @@ final class AudioController {
 
     private(set) var state: State = .stopped
 
+    // The output used when attenuation was successfully started.
+    // It is deliberately preserved while the screen is asleep.
+    private var preferredOutputUID: String?
+
     func setAttenuation(decibels: Int) {
         processor.setDecibels(decibels)
     }
@@ -75,41 +79,137 @@ final class AudioController {
         }
 
         guard #available(macOS 14.2, *) else {
-            let message =
-                "macOS 14.2 or later is required for audio attenuation."
-
-            state = .failed(message)
-
-            throw NSError(
-                domain: "EvniaControl.Audio",
+            throw audioError(
                 code: 1,
-                userInfo: [
-                    NSLocalizedDescriptionKey: message
-                ]
+                message:
+                    "macOS 14.2 or later is required for audio attenuation."
             )
         }
 
         guard let output =
             try AudioDevices.defaultOutput()
         else {
-            let message =
-                "No default audio output is available."
-
-            state = .failed(message)
-
-            throw NSError(
-                domain: "EvniaControl.Audio",
+            throw audioError(
                 code: 2,
-                userInfo: [
-                    NSLocalizedDescriptionKey: message
-                ]
+                message:
+                    "No default audio output is available."
             )
         }
+
+        try startEngine(
+            decibels: decibels,
+            outputUID: output.uid,
+            rememberAsPreferred: true
+        )
+    }
+
+    func suspendForScreenSleep() {
+        // CoreAudioTapKit mutes the original tapped stream while the
+        // attenuation engine is running. If the display audio device
+        // disappears during screen sleep, leaving the tap alive can
+        // therefore leave the system with silence and no valid output.
+        //
+        // Stop only the engine here. Keep preferredOutputUID so the
+        // same physical output can be selected again after wake.
+        stopEngine(
+            resetPreferredOutput: false,
+            resetProcessorGain: false
+        )
+    }
+
+    func resumePreferredOutput(
+        decibels: Int
+    ) throws -> Bool {
+        guard decibels < 0 else {
+            stop()
+            return true
+        }
+
+        guard #available(macOS 14.2, *) else {
+            throw audioError(
+                code: 1,
+                message:
+                    "macOS 14.2 or later is required for audio attenuation."
+            )
+        }
+
+        guard let preferredOutputUID else {
+            try start(decibels: decibels)
+            return true
+        }
+
+        let outputs = try AudioDevices.outputs()
+
+        guard outputs.contains(
+            where: { $0.uid == preferredOutputUID }
+        ) else {
+            return false
+        }
+
+        try startEngine(
+            decibels: decibels,
+            outputUID: preferredOutputUID,
+            rememberAsPreferred: false
+        )
+
+        return true
+    }
+
+    func resumeDefaultOutput(
+        decibels: Int
+    ) throws {
+        guard decibels < 0 else {
+            stop()
+            return
+        }
+
+        guard let output =
+            try AudioDevices.defaultOutput()
+        else {
+            throw audioError(
+                code: 2,
+                message:
+                    "No default audio output is available."
+            )
+        }
+
+        // Do not overwrite preferredOutputUID here. If macOS has
+        // temporarily fallen back to the Mac's speakers, keep the
+        // previous Evnia UID so a later wake can still recover it.
+        try startEngine(
+            decibels: decibels,
+            outputUID: output.uid,
+            rememberAsPreferred: false
+        )
+    }
+
+    func stop() {
+        stopEngine(
+            resetPreferredOutput: true,
+            resetProcessorGain: true
+        )
+    }
+
+    private func startEngine(
+        decibels: Int,
+        outputUID: String,
+        rememberAsPreferred: Bool
+    ) throws {
+        engine.stop()
+        state = .stopped
 
         processor.setDecibels(decibels)
 
         do {
-            try engine.start(outputUID: output.uid)
+            try engine.start(
+                outputUID: outputUID
+            )
+
+            if rememberAsPreferred
+                || preferredOutputUID == nil {
+                preferredOutputUID = outputUID
+            }
+
             state = .running
         } catch {
             engine.stop()
@@ -120,9 +220,34 @@ final class AudioController {
         }
     }
 
-    func stop() {
+    private func stopEngine(
+        resetPreferredOutput: Bool,
+        resetProcessorGain: Bool
+    ) {
         engine.stop()
         state = .stopped
-        processor.setDecibels(0)
+
+        if resetPreferredOutput {
+            preferredOutputUID = nil
+        }
+
+        if resetProcessorGain {
+            processor.setDecibels(0)
+        }
+    }
+
+    private func audioError(
+        code: Int,
+        message: String
+    ) -> NSError {
+        state = .failed(message)
+
+        return NSError(
+            domain: "EvniaControl.Audio",
+            code: code,
+            userInfo: [
+                NSLocalizedDescriptionKey: message
+            ]
+        )
     }
 }

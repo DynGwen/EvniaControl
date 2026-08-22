@@ -65,6 +65,7 @@ final class AppModel: ObservableObject {
     private var brightnessWriteTask: Task<Void, Never>?
     private var volumeWriteTask: Task<Void, Never>?
     private var refreshTimer: Timer?
+    private var audioRecoveryTask: Task<Void, Never>?
     private var lastAudibleVolume = 50
 
     private init() {
@@ -322,6 +323,88 @@ final class AppModel: ObservableObject {
         } catch {
             attenuationStatus =
                 error.localizedDescription
+        }
+    }
+
+    func prepareForScreenSleep() {
+        audioRecoveryTask?.cancel()
+        audioRecoveryTask = nil
+        audio.suspendForScreenSleep()
+    }
+
+    func recoverAfterScreenWake() {
+        audioRecoveryTask?.cancel()
+
+        audioRecoveryTask = Task { @MainActor in
+            // Give the display's audio device a short initial window
+            // to re-register with Core Audio.
+            try? await Task.sleep(
+                nanoseconds: 800_000_000
+            )
+
+            guard !Task.isCancelled else {
+                return
+            }
+
+            await AppModel.shared.refresh()
+
+            guard AppModel.shared.attenuationDB < 0 else {
+                return
+            }
+
+            var lastError: Error?
+
+            // Six bounded attempts, one second apart. This is wake-only
+            // recovery, not permanent polling.
+            for attempt in 0..<6 {
+                guard !Task.isCancelled else {
+                    return
+                }
+
+                if attempt > 0 {
+                    try? await Task.sleep(
+                        nanoseconds: 1_000_000_000
+                    )
+                }
+
+                do {
+                    let resumed =
+                        try AppModel.shared.audio
+                            .resumePreferredOutput(
+                                decibels:
+                                    AppModel.shared
+                                        .attenuationDB
+                            )
+
+                    if resumed {
+                        AppModel.shared
+                            .attenuationStatus = nil
+                        return
+                    }
+                } catch {
+                    lastError = error
+                }
+            }
+
+            // The previous output did not return in time. Fall back to
+            // whichever output macOS currently exposes so audio does
+            // not remain silent.
+            do {
+                try AppModel.shared.audio
+                    .resumeDefaultOutput(
+                        decibels:
+                            AppModel.shared
+                                .attenuationDB
+                    )
+
+                AppModel.shared
+                    .attenuationStatus = nil
+            } catch {
+                AppModel.shared
+                    .attenuationStatus =
+                        (lastError ?? error)
+                            .localizedDescription
+            }
         }
     }
 

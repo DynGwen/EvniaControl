@@ -1,12 +1,17 @@
 {
   "name": "Evnia Control",
-  "version": "1.0.20 English",
+  "version": "1.0.21 AudioWakeFix",
   "base_code": "1.0.0",
-  "accepted_state_reapplied": "1.0.19 PersistenceFix",
-  "change_only": "English localization of all user-visible strings",
-  "functional_logic_changed": false,
-  "language": "English",
+  "accepted_state_reapplied": "1.0.20 English",
+  "change_only": "Audio recovery after screen/system sleep",
+  "wake_audio_behavior": {
+    "on_screen_sleep": "stop Core Audio tap engine but preserve preferred output UID",
+    "on_screen_wake": "retry previous output for up to 6 bounded attempts",
+    "fallback": "current default output if previous output does not return",
+    "permanent_polling": false
+  },
   "preserved": [
+    "English interface",
     "Magic Keyboard 5% steps",
     "Option+Shift 1% fine step",
     "brightness/volume/attenuation persistence",

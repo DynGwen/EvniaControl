@@ -1,6 +1,6 @@
 # Evnia Control
 
-**Evnia Control 1.0.20** is a lightweight macOS menu bar application for controlling a Philips Evnia display from a Mac.
+**Evnia Control 1.0.21** is a lightweight macOS menu bar application for controlling a Philips Evnia display from a Mac.
 
 It provides direct control of display brightness and hardware volume through DDC/CI, supports Magic Keyboard media keys, and adds optional software audio attenuation for monitors whose minimum volume is still too loud.
 
@@ -51,7 +51,7 @@ Unzip the downloaded archive.
 Open the extracted folder:
 
 ```text
-Evnia-Control
+Evnia-Control-1.0.20-English
 ```
 
 ### 2. Run the installer
@@ -282,3 +282,33 @@ Evnia Control is installed for the current user only:
 ```
 
 No Homebrew installation is required for normal use.
+
+
+---
+
+## Screen Sleep and Audio Recovery
+
+When the Evnia display goes to sleep, its audio device can temporarily
+disappear from Core Audio.
+
+Evnia Control now handles this automatically:
+
+1. the software attenuation engine is released when the screen sleeps;
+2. the previously used audio-output UID is remembered;
+3. when the screen wakes, Evnia Control waits for that output to return;
+4. the attenuation engine is rebuilt on the same output;
+5. if the previous output does not return after bounded retries, Evnia Control
+   falls back to the currently available macOS output instead of leaving the
+   system silent.
+
+This recovery runs only after screen/system wake. It does not add permanent
+high-frequency polling.
+
+---
+
+## Version
+
+```text
+Evnia Control 1.0.21
+English
+```
