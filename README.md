@@ -51,7 +51,7 @@ Unzip the downloaded archive.
 Open the extracted folder:
 
 ```text
-Evnia-Control-1.0.20-English
+Evnia-Control
 ```
 
 ### 2. Run the installer
