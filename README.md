@@ -1,9 +1,4 @@
-# Evnia Control 1.0.20 English
-
-Rebuilt from **v1.0.0**, with the accepted **1.0.19 PersistenceFix**
-functional state reapplied.
-
-## Change in this version
+# Evnia Control 1.0.20
 
 The application interface is now fully in English:
 
