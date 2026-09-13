@@ -17,7 +17,7 @@ log() {
 }
 
 fail() {
-    printf "\033[1;31m[Erreur]\033[0m %s\n" "$1" >&2
+    printf "\033[1;31m[Error]\033[0m %s\n" "$1" >&2
     exit 1
 }
 
@@ -52,7 +52,7 @@ EXECUTABLE_PATH="$(
 )/${PRODUCT_NAME}"
 
 if [[ ! -x "${EXECUTABLE_PATH}" ]]; then
-    fail "Evnia Control build failed."
+    fail "Evnia Control could not be built."
 fi
 
 log "Downloading the DDC engine..."
@@ -65,7 +65,7 @@ make -C "${M1DDC_DIR}" >/dev/null
 
 M1DDC_BINARY="${M1DDC_DIR}/m1ddc"
 if [[ ! -x "${M1DDC_BINARY}" ]]; then
-    fail "m1ddc build failed."
+    fail "m1ddc could not be built."
 fi
 
 log "Creating the application..."
@@ -94,7 +94,7 @@ chmod +x \
 cp "${M1DDC_DIR}/LICENSE" \
     "${APP_BUNDLE}/Contents/Resources/Licenses/m1ddc-LICENSE.txt"
 
-log "Applying local code signature..."
+log "Applying a local signature..."
 codesign \
     --force \
     --deep \
@@ -117,7 +117,7 @@ APPLESCRIPT
 
 # Remove the obsolete per-user copy created by older installers.
 if [[ -d "${LEGACY_INSTALL_APP}" ]]; then
-    log "Removing the old per-user installation..."
+    log "Removing the obsolete per-user installation..."
     rm -rf "${LEGACY_INSTALL_APP}"
 fi
 
@@ -126,5 +126,5 @@ log "Launching..."
 open "${INSTALL_APP}"
 
 printf "\n"
-printf "Audio attenuation may require the system "
-printf "audio recording permission when first enabled.\n"
+printf "Audio attenuation may require System Audio Recording permission "
+printf "the first time it is enabled.\n"

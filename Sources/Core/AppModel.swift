@@ -9,7 +9,7 @@ final class AppModel: ObservableObject {
 
     @Published private(set) var isConnected = false
     @Published private(set) var displayName = "Evnia"
-    @Published private(set) var statusMessage = "Searching for display…"
+    @Published private(set) var statusMessage = "Searching for the display…"
 
     @Published var brightness: Int
     @Published var volume: Int

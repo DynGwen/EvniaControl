@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TahoePillSlider: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Binding var value: Double
 
     let range: ClosedRange<Double>
@@ -48,9 +49,11 @@ struct TahoePillSlider: View {
                         style: .continuous
                     )
                     .fill(
-                        Color(
-                            nsColor: .controlBackgroundColor
-                        )
+                        colorScheme == .dark
+                            ? Color.white
+                            : Color(
+                                nsColor: .controlBackgroundColor
+                            )
                     )
                     .overlay(
                         RoundedRectangle(

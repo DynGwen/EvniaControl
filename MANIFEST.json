@@ -1,11 +1,12 @@
 {
   "name": "Evnia Control",
   "version": "1.0.26 English",
-  "canonical_state": "validated 1.0.51 state renumbered as 1.0.26",
+  "canonical_state": "validated 1.0.51 state renumbered as 1.0.26, with dark-mode slider thumb contrast fix",
   "base_code": "1.0.0",
   "functional_behavior_changed": false,
-  "visual_behavior_changed": false,
+  "visual_behavior_changed": true,
   "language_only_difference_between_archives": true,
+  "dark_mode_slider_thumbs": "white",
   "core_audio_tap_kit": "from 0.1.0",
   "ambiglow": "not managed"
 }

@@ -4,7 +4,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
-    <string>fr</string>
+    <string>en</string>
     <key>CFBundleExecutable</key>
     <string>Evnia Control</string>
     <key>CFBundleIdentifier</key>
@@ -30,6 +30,6 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSAudioCaptureUsageDescription</key>
-    <string>Evnia Control applique l’atténuation audio demandée avant l’envoi du son vers l’écran.</string>
+    <string>Evnia Control applies the requested audio attenuation before sending sound to the display.</string>
 </dict>
 </plist>

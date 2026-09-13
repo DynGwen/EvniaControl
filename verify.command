@@ -13,6 +13,8 @@ plutil -lint "${ROOT_DIR}/Resources/Info.plist"
 grep -q 'thumbWidth: CGFloat = 20' "${SLIDER}"
 grep -q 'thumbHeight: CGFloat = 16' "${SLIDER}"
 grep -q 'Color.accentColor' "${SLIDER}"
+grep -Fq '@Environment(\.colorScheme)' "${SLIDER}"
+grep -q 'Color.white' "${SLIDER}"
 
 grep -q 'TahoePillSlider(' "${MENU}"
 grep -q 'graduationCount: 21' "${ATTEN}"
@@ -36,13 +38,17 @@ if grep -Rqi 'ambiglow' "${ROOT_DIR}/Sources"; then
     exit 1
 fi
 
-grep -q '1.0.49' "${ROOT_DIR}/Resources/Info.plist"
+grep -q '<string>1.0.26</string>' "${ROOT_DIR}/Resources/Info.plist"
+grep -q '<string>en</string>' "${ROOT_DIR}/Resources/Info.plist"
+grep -q 'title: "Brightness"' "${MENU}"
 
 echo "Tahoe sliders: OK"
 echo "20 × 16 thumbs: OK"
-echo "21 attenuation ticks: OK"
+echo "White thumbs in dark mode: OK"
+echo "21 attenuation graduations: OK"
 echo "16 pt corners: OK"
 echo "Tahoe background: OK"
 echo "Mute at 0%: OK"
-echo "1.0.26 functionality preserved: OK"
-echo "Version 1.0.49 : OK"
+echo "1.0.26 features preserved: OK"
+echo "Version 1.0.26: OK"
+echo "English language: OK"

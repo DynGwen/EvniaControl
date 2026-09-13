@@ -108,7 +108,7 @@ final class OptionsWindowController: NSWindowController {
             defer: false
         )
 
-        window.title = "Evnia Control Options"
+        window.title = "Options Evnia Control"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .visible
         window.toolbarStyle = .unifiedCompact
@@ -168,7 +168,7 @@ final class OptionsWindowController: NSWindowController {
         if let message = AppModel.shared.attenuationStatus {
             statusLabel.stringValue = "Audio: \(message)"
         } else if AppModel.shared.attenuationDB < 0 {
-            statusLabel.stringValue = "Audio attenuation active via Core Audio."
+            statusLabel.stringValue = "Audio attenuation is active via Core Audio."
         } else {
             statusLabel.stringValue = "0 dB: no attenuation."
         }

@@ -12,7 +12,7 @@ actor M1DDCDriver {
         var errorDescription: String? {
             switch self {
             case .helperMissing:
-                return "The built-in DDC engine could not be found."
+                return "The bundled DDC engine could not be found."
             case .displayNotFound:
                 return "No compatible Evnia display was detected."
             case let .commandFailed(message):
@@ -258,7 +258,7 @@ actor M1DDCDriver {
             )
         } catch ProcessRunnerError.timedOut {
             throw DriverError.commandFailed(
-                "DDC control timed out. " +
+                "The DDC request timed out. " +
                 "Disconnect and reconnect the display, then try again."
             )
         } catch {
@@ -284,7 +284,7 @@ actor M1DDCDriver {
         if !stderr.isEmpty {
             return stderr
         }
-        return "DDC command failed."
+        return "The DDC command failed."
     }
 
     private func clamped(_ value: Int) -> Int {
