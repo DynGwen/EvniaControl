@@ -1,4 +1,4 @@
-# Evnia Control 1.0.26 — English
+# Evnia Control 1.0.26
 
 Evnia Control is a small native macOS application for controlling a Philips
 Evnia display from the menu bar.
