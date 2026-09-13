@@ -88,7 +88,9 @@ final class AppModel: ObservableObject {
         ) as? Bool ?? false
 
         brightness = restoredBrightness
-        volume = restoredMuted ? 0 : restoredVolume
+        volume = restoredMuted
+            ? 0
+            : restoredVolume
 
         keyboardControlEnabled = storedDefaults.object(
             forKey: Keys.keyboardEnabled
@@ -185,8 +187,9 @@ final class AppModel: ObservableObject {
 
             if isMuted {
                 // Mute is authoritative until the user explicitly
-                // chooses Unmute. Never restore a non-zero hardware
-                // volume from an automatic refresh while muted.
+                // chooses Unmute. Keep the public/UI value at zero.
+                volume = 0
+
                 do {
                     try await driver.setMute(true)
                 } catch {
@@ -244,7 +247,6 @@ final class AppModel: ObservableObject {
 
     func userSetVolume(_ value: Int) {
         guard !isMuted else {
-            // Keep the visible volume at 0% while muted.
             volumeWriteTask?.cancel()
             volume = 0
             return
@@ -274,8 +276,6 @@ final class AppModel: ObservableObject {
 
     func changeVolume(by delta: Int) {
         guard !isMuted else {
-            // Volume media keys cannot implicitly unmute and the
-            // visible volume remains at 0%.
             volumeWriteTask?.cancel()
             volume = 0
             return

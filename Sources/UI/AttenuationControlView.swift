@@ -5,8 +5,8 @@ import SwiftUI
 @MainActor
 private final class AttenuationViewModel:
     ObservableObject {
-    @Published var value: Int = 0
-    @Published var isEnabled: Bool = true
+    @Published var value = 0
+    @Published var isEnabled = true
 
     var onChange: ((Int) -> Void)?
 
@@ -52,7 +52,8 @@ private final class AttenuationViewModel:
 }
 
 @MainActor
-private struct AttenuationSliderContent: View {
+private struct AttenuationSliderContent:
+    View {
     @ObservedObject var model:
         AttenuationViewModel
 
@@ -109,25 +110,12 @@ private struct AttenuationSliderContent: View {
                 Spacer()
                 Text("0 dB")
             }
-            .font(
-                .system(size: 10)
-            )
-            .foregroundStyle(
-                .secondary
-            )
+            .font(.system(size: 10))
+            .foregroundStyle(.secondary)
         }
-        .padding(
-            .horizontal,
-            8
-        )
-        .padding(
-            .top,
-            4
-        )
-        .padding(
-            .bottom,
-            2
-        )
+        .padding(.horizontal, 8)
+        .padding(.top, 4)
+        .padding(.bottom, 2)
     }
 }
 
@@ -157,34 +145,26 @@ final class AttenuationControlView:
     override init(
         frame frameRect: NSRect
     ) {
-        super.init(
-            frame: frameRect
-        )
+        super.init(frame: frameRect)
 
         hostingView
             .translatesAutoresizingMaskIntoConstraints =
                 false
 
-        addSubview(
-            hostingView
-        )
+        addSubview(hostingView)
 
         NSLayoutConstraint.activate([
             hostingView.leadingAnchor.constraint(
-                equalTo:
-                    leadingAnchor
+                equalTo: leadingAnchor
             ),
             hostingView.trailingAnchor.constraint(
-                equalTo:
-                    trailingAnchor
+                equalTo: trailingAnchor
             ),
             hostingView.topAnchor.constraint(
-                equalTo:
-                    topAnchor
+                equalTo: topAnchor
             ),
             hostingView.bottomAnchor.constraint(
-                equalTo:
-                    bottomAnchor
+                equalTo: bottomAnchor
             ),
         ])
 

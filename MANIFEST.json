@@ -1,10 +1,11 @@
 {
   "name": "Evnia Control",
-  "version": "1.0.39 English",
+  "version": "1.0.26 English",
+  "canonical_state": "validated 1.0.51 state renumbered as 1.0.26",
   "base_code": "1.0.0",
-  "frozen_slider_reference": "1.0.36",
-  "change_only": "16 pt continuous outer window corners",
-  "no_transparency_changes": true,
-  "no_slider_changes": true,
+  "functional_behavior_changed": false,
+  "visual_behavior_changed": false,
+  "language_only_difference_between_archives": true,
+  "core_audio_tap_kit": "from 0.1.0",
   "ambiglow": "not managed"
 }

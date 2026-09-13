@@ -19,7 +19,7 @@ struct MenuContentView: View {
                         Double(model.brightness)
                     },
                     set: {
-                        model.userSetBrightness(Int($0.rounded()))
+                        model.userSetBrightness(Int($0))
                     }
                 )
             )
@@ -35,7 +35,7 @@ struct MenuContentView: View {
                         Double(model.volume)
                     },
                     set: {
-                        model.userSetVolume(Int($0.rounded()))
+                        model.userSetVolume(Int($0))
                     }
                 )
             )
@@ -101,10 +101,7 @@ struct MenuContentView: View {
         }
         .padding(16)
         .frame(width: 340)
-        .background(
-            TahoeWindowCornerBridge()
-                .frame(width: 0, height: 0)
-        )
+        .tahoeWindowSurface()
     }
 
     private var header: some View {

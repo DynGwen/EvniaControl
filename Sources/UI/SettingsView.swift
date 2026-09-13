@@ -5,5 +5,6 @@ struct SettingsView: View {
         Text("Use Options… in Evnia Control.")
             .padding(30)
             .frame(width: 360, height: 120)
+            .tahoeWindowSurface()
     }
 }

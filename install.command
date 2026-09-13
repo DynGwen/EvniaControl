@@ -17,12 +17,12 @@ log() {
 }
 
 fail() {
-    printf "\033[1;31m[Error]\033[0m %s\n" "$1" >&2
+    printf "\033[1;31m[Erreur]\033[0m %s\n" "$1" >&2
     exit 1
 }
 
 if [[ "$(uname -m)" != "arm64" ]]; then
-    fail "Evnia Control 1.0.39 requires an Apple Silicon Mac."
+    fail "Evnia Control 1.0.26 requires an Apple Silicon Mac."
 fi
 
 if ! xcode-select -p >/dev/null 2>&1; then
@@ -52,7 +52,7 @@ EXECUTABLE_PATH="$(
 )/${PRODUCT_NAME}"
 
 if [[ ! -x "${EXECUTABLE_PATH}" ]]; then
-    fail "Evnia Control failed to build."
+    fail "Evnia Control build failed."
 fi
 
 log "Downloading the DDC engine..."
@@ -65,7 +65,7 @@ make -C "${M1DDC_DIR}" >/dev/null
 
 M1DDC_BINARY="${M1DDC_DIR}/m1ddc"
 if [[ ! -x "${M1DDC_BINARY}" ]]; then
-    fail "m1ddc failed to build."
+    fail "m1ddc build failed."
 fi
 
 log "Creating the application..."
@@ -94,7 +94,7 @@ chmod +x \
 cp "${M1DDC_DIR}/LICENSE" \
     "${APP_BUNDLE}/Contents/Resources/Licenses/m1ddc-LICENSE.txt"
 
-log "Applying local signature..."
+log "Applying local code signature..."
 codesign \
     --force \
     --deep \
@@ -117,7 +117,7 @@ APPLESCRIPT
 
 # Remove the obsolete per-user copy created by older installers.
 if [[ -d "${LEGACY_INSTALL_APP}" ]]; then
-    log "Removing legacy user-level installation..."
+    log "Removing the old per-user installation..."
     rm -rf "${LEGACY_INSTALL_APP}"
 fi
 
@@ -126,5 +126,5 @@ log "Launching..."
 open "${INSTALL_APP}"
 
 printf "\n"
-printf "Audio attenuation may require permission for "
-printf "System Audio Recording the first time it is enabled.\n"
+printf "Audio attenuation may require the system "
+printf "audio recording permission when first enabled.\n"
