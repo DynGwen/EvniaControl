@@ -19,7 +19,7 @@ struct MenuContentView: View {
                         Double(model.brightness)
                     },
                     set: {
-                        model.userSetBrightness(Int($0))
+                        model.userSetBrightness(Int($0.rounded()))
                     }
                 )
             )
@@ -35,7 +35,7 @@ struct MenuContentView: View {
                         Double(model.volume)
                     },
                     set: {
-                        model.userSetVolume(Int($0))
+                        model.userSetVolume(Int($0.rounded()))
                     }
                 )
             )
@@ -101,6 +101,10 @@ struct MenuContentView: View {
         }
         .padding(16)
         .frame(width: 340)
+        .background(
+            TahoeWindowCornerBridge()
+                .frame(width: 0, height: 0)
+        )
     }
 
     private var header: some View {
@@ -149,12 +153,12 @@ struct MenuContentView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Slider(
+            TahoePillSlider(
                 value: binding,
-                in: 0...100,
-                step: 1
+                range: 0...100,
+                step: 1,
+                isEnabled: model.isConnected
             )
-            .disabled(!model.isConnected)
         }
     }
 }

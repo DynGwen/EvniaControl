@@ -130,6 +130,8 @@ final class OptionsWindowController:
         window.isReleasedWhenClosed = false
         window.tabbingMode = .disallowed
 
+        TahoeWindowCorners.apply(to: window)
+
         self.window = window
     }
 

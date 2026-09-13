@@ -13,7 +13,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/CJStanfield/CoreAudioTapKit.git",
-            revision: "91538c3f432752c6bb7bb0efbfe4c26a67d19a5b"
+            from: "0.1.0"
         )
     ],
     targets: [

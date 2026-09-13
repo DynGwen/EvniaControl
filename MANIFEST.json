@@ -1,22 +1,10 @@
 {
   "name": "Evnia Control",
-  "version": "1.0.27 English",
+  "version": "1.0.39 English",
   "base_code": "1.0.0",
-  "accepted_state_reapplied": "1.0.26 French",
-  "changes": [
-    "Mute immediately publishes volume 0%",
-    "Previous audible volume restored on unmute",
-    "Volume UI remains 0% while muted"
-  ],
-  "ambiglow": "not managed",
-  "preserved": [
-    "explicit-only persistent mute",
-    "installation in /Applications",
-    "administrator authorization",
-    "audio wake recovery",
-    "Magic Keyboard 5% steps",
-    "Option+Shift 1% fine step",
-    "Core Audio attenuation -60..0 dB",
-    "no manual Refresh button"
-  ]
+  "frozen_slider_reference": "1.0.36",
+  "change_only": "16 pt continuous outer window corners",
+  "no_transparency_changes": true,
+  "no_slider_changes": true,
+  "ambiglow": "not managed"
 }
