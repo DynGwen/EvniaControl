@@ -1,30 +1,22 @@
 {
   "name": "Evnia Control",
-  "version": "1.0.25 MuteInstallFix",
+  "version": "1.0.27 English",
   "base_code": "1.0.0",
-  "accepted_state_reapplied": "1.0.24 English",
+  "accepted_state_reapplied": "1.0.26 French",
   "changes": [
-    "Mute state persists in UserDefaults",
-    "Automatic refresh cannot unmute",
-    "Mouse volume changes cannot unmute",
-    "Magic Keyboard volume changes cannot unmute",
-    "Pending volume writes are cancelled when muting",
-    "Muted hardware volume is fail-safe forced to 0",
-    "Installer targets /Applications",
-    "Installer uses macOS administrator authorization",
-    "Legacy ~/Applications/Evnia Control.app is removed after successful install"
+    "Mute immediately publishes volume 0%",
+    "Previous audible volume restored on unmute",
+    "Volume UI remains 0% while muted"
   ],
+  "ambiglow": "not managed",
   "preserved": [
-    "1.0.23 audio wake restart fix",
-    "English interface",
+    "explicit-only persistent mute",
+    "installation in /Applications",
+    "administrator authorization",
+    "audio wake recovery",
     "Magic Keyboard 5% steps",
     "Option+Shift 1% fine step",
-    "brightness/volume/attenuation persistence",
     "Core Audio attenuation -60..0 dB",
-    "3 dB attenuation step",
-    "full-width attenuation slider",
-    "application icon",
-    "automatic refresh",
-    "manual Refresh remains removed"
+    "no manual Refresh button"
   ]
 }

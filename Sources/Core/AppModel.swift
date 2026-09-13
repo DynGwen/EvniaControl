@@ -83,8 +83,12 @@ final class AppModel: ObservableObject {
             ) as? Int ?? 50
         )
 
+        let restoredMuted = storedDefaults.object(
+            forKey: Keys.savedMuted
+        ) as? Bool ?? false
+
         brightness = restoredBrightness
-        volume = restoredVolume
+        volume = restoredMuted ? 0 : restoredVolume
 
         keyboardControlEnabled = storedDefaults.object(
             forKey: Keys.keyboardEnabled
@@ -109,9 +113,7 @@ final class AppModel: ObservableObject {
             ) as? Int ?? 0
         )
 
-        isMuted = storedDefaults.object(
-            forKey: Keys.savedMuted
-        ) as? Bool ?? false
+        isMuted = restoredMuted
 
         // All required stored properties are initialized above.
         lastAudibleVolume = restoredVolume > 0
@@ -241,6 +243,13 @@ final class AppModel: ObservableObject {
     }
 
     func userSetVolume(_ value: Int) {
+        guard !isMuted else {
+            // Keep the visible volume at 0% while muted.
+            volumeWriteTask?.cancel()
+            volume = 0
+            return
+        }
+
         volume = clamp(value)
         persist(
             volume,
@@ -249,13 +258,6 @@ final class AppModel: ObservableObject {
 
         if volume > 0 {
             lastAudibleVolume = volume
-        }
-
-        guard !isMuted else {
-            // While muted, update only the desired volume. It will be
-            // applied when the user explicitly unmutes.
-            volumeWriteTask?.cancel()
-            return
         }
 
         scheduleVolumeWrite()
@@ -271,6 +273,14 @@ final class AppModel: ObservableObject {
     }
 
     func changeVolume(by delta: Int) {
+        guard !isMuted else {
+            // Volume media keys cannot implicitly unmute and the
+            // visible volume remains at 0%.
+            volumeWriteTask?.cancel()
+            volume = 0
+            return
+        }
+
         volume = clamp(volume + delta)
 
         if volume > 0 {
@@ -282,13 +292,6 @@ final class AppModel: ObservableObject {
             forKey: Keys.savedVolume
         )
 
-        guard !isMuted else {
-            // Media-key volume changes adjust the desired level but
-            // cannot implicitly unmute the display.
-            volumeWriteTask?.cancel()
-            return
-        }
-
         scheduleVolumeWrite()
     }
 
@@ -298,6 +301,10 @@ final class AppModel: ObservableObject {
         if targetMuted {
             if volume > 0 {
                 lastAudibleVolume = volume
+                persist(
+                    volume,
+                    forKey: Keys.savedVolume
+                )
             }
 
             // Prevent a delayed non-zero volume write from racing with
@@ -305,6 +312,7 @@ final class AppModel: ObservableObject {
             volumeWriteTask?.cancel()
             volumeWriteTask = nil
 
+            volume = 0
             isMuted = true
             persistMuteState()
 
@@ -324,7 +332,7 @@ final class AppModel: ObservableObject {
         persistMuteState()
 
         let restore = max(
-            volume > 0 ? volume : lastAudibleVolume,
+            lastAudibleVolume,
             volumeStep
         )
 
