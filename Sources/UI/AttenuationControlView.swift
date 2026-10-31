@@ -75,7 +75,7 @@ private struct AttenuationSliderContent:
             spacing: 5
         ) {
             HStack {
-                Text("Attenuation")
+                Text(L10n.attenuation)
                     .font(
                         .system(
                             size: 13,
@@ -104,6 +104,8 @@ private struct AttenuationSliderContent:
                 showsGraduations: true,
                 graduationCount: 21
             )
+            .accessibilityLabel(L10n.attenuation)
+            .accessibilityValue("\(model.value) dB")
 
             HStack {
                 Text("−60 dB")

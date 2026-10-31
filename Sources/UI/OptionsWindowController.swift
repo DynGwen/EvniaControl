@@ -15,7 +15,7 @@ final class OptionsWindowController: NSWindowController {
     )
 
     private let launchCheckbox = NSButton(
-        checkboxWithTitle: "Launch Evnia Control at login",
+        checkboxWithTitle: L10n.launchAtLogin,
         target: nil,
         action: nil
     )
@@ -108,7 +108,7 @@ final class OptionsWindowController: NSWindowController {
             defer: false
         )
 
-        window.title = "Options Evnia Control"
+        window.title = L10n.optionsWindowTitle
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .visible
         window.toolbarStyle = .unifiedCompact
@@ -166,11 +166,11 @@ final class OptionsWindowController: NSWindowController {
 
     private func refreshStatus() {
         if let message = AppModel.shared.attenuationStatus {
-            statusLabel.stringValue = "Audio: \(message)"
+            statusLabel.stringValue = L10n.audioStatus(message)
         } else if AppModel.shared.attenuationDB < 0 {
-            statusLabel.stringValue = "Audio attenuation is active via Core Audio."
+            statusLabel.stringValue = L10n.attenuationActive
         } else {
-            statusLabel.stringValue = "0 dB: no attenuation."
+            statusLabel.stringValue = L10n.noAttenuation
         }
     }
 

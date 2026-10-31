@@ -12,13 +12,13 @@ actor M1DDCDriver {
         var errorDescription: String? {
             switch self {
             case .helperMissing:
-                return "The bundled DDC engine could not be found."
+                return L10n.ddcEngineMissing
             case .displayNotFound:
-                return "No compatible Evnia display was detected."
+                return L10n.displayNotFound
             case let .commandFailed(message):
                 return message
             case .invalidResponse:
-                return "Invalid DDC response."
+                return L10n.invalidDDCResponse
             }
         }
     }
@@ -50,7 +50,7 @@ actor M1DDCDriver {
 
         guard brightness != nil || volume != nil else {
             throw DriverError.commandFailed(
-                "The display was detected, but DDC/CI is not responding."
+                L10n.ddcNotResponding
             )
         }
 
@@ -260,8 +260,7 @@ actor M1DDCDriver {
             )
         } catch ProcessRunnerError.timedOut {
             throw DriverError.commandFailed(
-                "The DDC request timed out. " +
-                "Disconnect and reconnect the display, then try again."
+                L10n.ddcTimedOut
             )
         } catch {
             throw DriverError.commandFailed(
@@ -286,7 +285,7 @@ actor M1DDCDriver {
         if !stderr.isEmpty {
             return stderr
         }
-        return "The DDC command failed."
+        return L10n.ddcCommandFailed
     }
 
     private func clamped(_ value: Int) -> Int {

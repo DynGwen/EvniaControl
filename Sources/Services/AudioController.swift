@@ -84,7 +84,7 @@ final class AudioController {
             throw audioError(
                 code: 2,
                 message:
-                    "No default audio output is available."
+                    L10n.noAudioOutput
             )
         }
 
@@ -147,7 +147,7 @@ final class AudioController {
             throw audioError(
                 code: 2,
                 message:
-                    "No default audio output is available."
+                    L10n.noAudioOutput
             )
         }
 

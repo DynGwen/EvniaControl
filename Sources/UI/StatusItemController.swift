@@ -19,7 +19,7 @@ private final class FeedbackPanel: NSPanel {
 /// Owns the real status item so both windows can anchor to its public button
 /// geometry, without searching other apps' menu-bar windows or private APIs.
 @MainActor
-final class StatusItemController: NSObject, NSWindowDelegate {
+final class StatusItemController: NSObject {
     private let model: AppModel
     private let statusItem: NSStatusItem
     private let menuPanel = MenuPanel(
@@ -43,7 +43,6 @@ final class StatusItemController: NSObject, NSWindowDelegate {
     private var localEventMonitor: Any?
     private var isHovering = false
     private var isDragging = false
-    private var menuVisibleAtButtonMouseDown = false
 
     init(model: AppModel) {
         self.model = model
@@ -53,6 +52,8 @@ final class StatusItemController: NSObject, NSWindowDelegate {
         statusItem.autosaveName = "EvniaControl.statusItem"
         statusItem.button?.target = self
         statusItem.button?.action = #selector(toggleMenu)
+        // One action per press. Mouse-up must not toggle the panel again.
+        statusItem.button?.sendAction(on: [.leftMouseDown])
         statusItem.button?.setAccessibilityLabel("Evnia Control")
         updateIcon()
 
@@ -67,10 +68,12 @@ final class StatusItemController: NSObject, NSWindowDelegate {
             panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
             panel.isFloatingPanel = true
         }
-        menuPanel.delegate = self
         feedbackPanel.becomesKeyOnlyIfNeeded = true
         menuPanel.contentView = NSHostingView(
-            rootView: MenuContentView().environmentObject(model)
+            rootView: MenuContentView(onOpenOptions: { [weak self] in
+                self?.closeMenu()
+                OptionsWindowController.shared.show()
+            }).environmentObject(model)
         )
         feedbackPanel.contentView = NSHostingView(
             rootView: ControlPopupView(
@@ -86,12 +89,19 @@ final class StatusItemController: NSObject, NSWindowDelegate {
         )
         bindModel()
         installEventMonitors()
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(activeApplicationChanged(_:)),
+            name: NSWorkspace.didActivateApplicationNotification,
+            object: nil
+        )
     }
 
     func stop() {
         dismissTask?.cancel()
         layoutTask?.cancel()
         cancellables.removeAll()
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
         if let globalMouseMonitor { NSEvent.removeMonitor(globalMouseMonitor) }
         if let localEventMonitor { NSEvent.removeMonitor(localEventMonitor) }
         globalMouseMonitor = nil
@@ -131,12 +141,9 @@ final class StatusItemController: NSObject, NSWindowDelegate {
     }
 
     @objc private func toggleMenu() {
-        // Clicking the status button may make the panel resign key before
-        // the button's mouse-up action arrives. Remember the mouse-down state
-        // so a second click closes the menu instead of reopening it.
-        let shouldClose = menuPanel.isVisible || menuVisibleAtButtonMouseDown
-        menuVisibleAtButtonMouseDown = false
-        if shouldClose {
+        // Only this action changes visibility for a status-button press.
+        // Losing key-window status during that press does not close/reopen it.
+        if menuPanel.isVisible {
             closeMenu()
             return
         }
@@ -151,8 +158,15 @@ final class StatusItemController: NSObject, NSWindowDelegate {
         statusItem.button?.highlight(false)
     }
 
-    func windowDidResignKey(_ notification: Notification) {
+    @objc private func activeApplicationChanged(_ notification: Notification) {
+        // A nonactivating panel can be open while another app is active.
+        // Workspace activation also catches Command-Tab without a mouse click.
+        guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey]
+            as? NSRunningApplication,
+            app.processIdentifier != ProcessInfo.processInfo.processIdentifier
+        else { return }
         closeMenu()
+        dismissFeedback()
     }
 
     private func showControl(_ kind: DisplayControlKind) {
@@ -235,10 +249,13 @@ final class StatusItemController: NSObject, NSWindowDelegate {
         // Mouse monitoring does not request keyboard/accessibility permission.
         globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.closeMenu()
-                self?.dismissFeedback()
+        ) { [weak self] event in
+            // AppKit calls event monitors on main. Handle the event now so an
+            // outside click cannot enqueue a dismissal after the next press.
+            MainActor.assumeIsolated {
+                guard let self, !self.isStatusButtonPress(event) else { return }
+                self.closeMenu()
+                self.dismissFeedback()
             }
         }
         localEventMonitor = NSEvent.addLocalMonitorForEvents(
@@ -263,13 +280,22 @@ final class StatusItemController: NSObject, NSWindowDelegate {
             }
             return false
         }
-        // Leave the status button to toggle the menu on mouse-up.
-        if event.window === statusItem.button?.window {
-            menuVisibleAtButtonMouseDown = menuPanel.isVisible
-            return false
-        }
+        // Both monitors leave the icon press to the button's single action.
+        if isStatusButtonPress(event) { return false }
         if event.window !== menuPanel { closeMenu() }
         if event.window !== feedbackPanel { dismissFeedback() }
         return false
+    }
+
+    private func isStatusButtonPress(_ event: NSEvent) -> Bool {
+        guard event.type == .leftMouseDown,
+              let button = statusItem.button, let window = button.window,
+              window.isVisible else { return false }
+        let buttonFrame = window.convertToScreen(button.convert(button.bounds, to: nil))
+        // Windowless/global mouse events already use screen coordinates.
+        let point = event.window?.convertToScreen(
+            NSRect(origin: event.locationInWindow, size: .zero)
+        ).origin ?? event.locationInWindow
+        return buttonFrame.contains(point)
     }
 }

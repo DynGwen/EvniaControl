@@ -1,6 +1,6 @@
 {
   "name": "Evnia Control",
-  "version": "1.0.34",
+  "version": "1.0.35",
   "deployment_minimum_macos": "27.0",
   "build_sdk_minimum": "27.0",
   "architecture": "Apple Silicon",
@@ -53,5 +53,21 @@
   "preserves_saved_settings": true,
   "keyboard_checks": 14,
   "core_audio_tap_kit": "from 0.1.0",
-  "validation": "Shell, cleanup and source integration checked on Linux; native compilation and Magic Keyboard Lightning physical input require validation on macOS 27"
+  "validation": "Prepared on Linux without Swift/AppKit/macOS SDK. Shell syntax, bundle metadata, localization coverage, installer control flow with mocked macOS tools, and archive integrity checked. Native release compilation, fourteen keyboard routing checks, menu-bar mouse/focus interactions, and monitor/audio hardware require macOS 27 validation.",
+  "menu_bar": {
+    "first_left_click": "open main panel",
+    "second_left_click": "close main panel, keep app running",
+    "action_event": "leftMouseDown only",
+    "dismissal": [
+      "outside click",
+      "Escape",
+      "activation of another application",
+      "open Options"
+    ],
+    "key_window_resignation_does_not_toggle": true,
+    "status_button_hit_test": "screen coordinates, including windowless events",
+    "global_mouse_dismissal": "synchronous on the main actor"
+  },
+  "language": "en",
+  "distribution": "source archive with local macOS build/install script; not a precompiled binary"
 }

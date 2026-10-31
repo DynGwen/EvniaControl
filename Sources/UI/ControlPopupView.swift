@@ -16,7 +16,7 @@ struct ControlPopupView: View {
     let onDrag: (Bool) -> Void
 
     private var title: String {
-        state.kind == .brightness ? "Brightness" : "Volume"
+        state.kind == .brightness ? L10n.brightness : L10n.volume
     }
 
     private var value: Int {
@@ -64,8 +64,9 @@ struct ControlPopupView: View {
                 step: 1,
                 isEnabled: isEnabled
             )
-            .accessibilityLabel("Display \(title.lowercased())")
-            .accessibilityValue("\(value) percent")
+            .accessibilityLabel(state.kind == .brightness
+                ? L10n.displayBrightness : L10n.displayVolume)
+            .accessibilityValue(L10n.percent(value))
             .simultaneousGesture(
                 DragGesture(minimumDistance: 0)
                     .updating($isDragging) { _, dragging, _ in dragging = true }

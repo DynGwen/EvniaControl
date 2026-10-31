@@ -13,7 +13,7 @@ final class AppModel: ObservableObject {
 
     @Published private(set) var isConnected = false
     @Published private(set) var displayName = "Evnia"
-    @Published private(set) var statusMessage = "Searching for the display…"
+    @Published private(set) var statusMessage = L10n.searchingForDisplay
     @Published private(set) var brightnessSupported = false
     @Published private(set) var volumeSupported = false
 
@@ -91,9 +91,9 @@ final class AppModel: ObservableObject {
     }
 
     private var connectedStatusMessage: String {
-        if !brightnessSupported { return "Connected — brightness DDC unavailable" }
-        if !volumeSupported { return "Connected — volume DDC unavailable" }
-        return "Connected"
+        if !brightnessSupported { return L10n.brightnessUnavailable }
+        if !volumeSupported { return L10n.volumeUnavailable }
+        return L10n.connected
     }
 
     func start() {

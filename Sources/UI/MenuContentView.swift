@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MenuContentView: View {
     @EnvironmentObject private var model: AppModel
+    let onOpenOptions: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -12,7 +13,7 @@ struct MenuContentView: View {
 
             controlRow(
                 icon: "sun.max.fill",
-                title: "Brightness",
+                title: L10n.brightness,
                 value: model.brightness,
                 isEnabled: model.isConnected && model.brightnessSupported,
                 binding: Binding(
@@ -29,7 +30,7 @@ struct MenuContentView: View {
                 icon: model.isMuted
                     ? "speaker.slash.fill"
                     : "speaker.wave.2.fill",
-                title: "Volume",
+                title: L10n.volume,
                 value: model.volume,
                 isEnabled: model.isConnected && model.volumeSupported && !model.isMuted,
                 binding: Binding(
@@ -48,8 +49,8 @@ struct MenuContentView: View {
                 } label: {
                     Label(
                         model.isMuted
-                            ? "Unmute"
-                            : "Mute",
+                            ? L10n.unmute
+                            : L10n.mute,
                         systemImage: model.isMuted
                             ? "speaker.wave.2"
                             : "speaker.slash"
@@ -63,25 +64,23 @@ struct MenuContentView: View {
 
                 VStack(alignment: .leading, spacing: 7) {
                     Label(
-                        "Media-key permission required",
+                        L10n.keyboardPermissionRequired,
                         systemImage: "keyboard.badge.ellipsis"
                     )
                     .font(.callout.bold())
 
                     Text(
-                        "Allow Evnia Control in " +
-                        "Privacy & Security > Accessibility " +
-                        "to use the sun and volume keys."
+                        L10n.keyboardPermissionHelp
                     )
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                     HStack {
-                        Button("Request Access") {
+                        Button(L10n.requestAccess) {
                             model.requestKeyboardAccess()
                         }
 
-                        Button("System Settings") {
+                        Button(L10n.systemSettings) {
                             model.openAccessibilitySettings()
                         }
                     }
@@ -91,13 +90,13 @@ struct MenuContentView: View {
             Divider()
 
             HStack {
-                Button("Options…") {
-                    OptionsWindowController.shared.show()
+                Button(L10n.options) {
+                    onOpenOptions()
                 }
 
                 Spacer()
 
-                Button("Quit") {
+                Button(L10n.quit) {
                     NSApplication.shared.terminate(nil)
                 }
             }
@@ -161,7 +160,7 @@ struct MenuContentView: View {
                 isEnabled: isEnabled
             )
             .accessibilityLabel(title)
-            .accessibilityValue("\(value) percent")
+            .accessibilityValue(L10n.percent(value))
         }
     }
 }

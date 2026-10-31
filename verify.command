@@ -38,9 +38,9 @@ if grep -Rqi 'ambiglow' "${ROOT_DIR}/Sources"; then
     exit 1
 fi
 
-grep -q '<string>1.0.34</string>' "${ROOT_DIR}/Resources/Info.plist"
+grep -q '<string>1.0.35</string>' "${ROOT_DIR}/Resources/Info.plist"
 grep -q '<string>en</string>' "${ROOT_DIR}/Resources/Info.plist"
-grep -q 'title: "Brightness"' "${MENU}"
+grep -q 'title: L10n.brightness' "${MENU}"
 
 echo "Tahoe sliders: OK"
 echo "20 × 16 thumbs: OK"
@@ -50,7 +50,7 @@ echo "16 pt corners: OK"
 echo "Tahoe background: OK"
 echo "Mute at 0%: OK"
 echo "Existing control layout preserved: OK"
-echo "Version 1.0.34: OK"
+echo "Version 1.0.35: OK"
 echo "English language: OK"
 
 # Real compiler validation in addition to the original visual invariants.
