@@ -1,0 +1,15 @@
+{
+  "originHash" : "4e505a6318deefb6ea999812d81babb38b7f85a3a7febcad1d6dfa8c24c811ca",
+  "pins" : [
+    {
+      "identity" : "coreaudiotapkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/CJStanfield/CoreAudioTapKit.git",
+      "state" : {
+        "revision" : "aab395f1e8e5dd1bd369c3bbfcf5c6bdca85e099",
+        "version" : "0.1.0"
+      }
+    }
+  ],
+  "version" : 3
+}
