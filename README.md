@@ -1,4 +1,4 @@
-# Evnia Control 1.0.35 — English edition
+# Evnia Control 1.0.35
 
 Menu-bar brightness, volume and audio attenuation for Philips Evnia displays
 on Apple Silicon, using the supplied project’s Liquid Glass interface.
