@@ -2,6 +2,8 @@ import SwiftUI
 
 struct TahoePillSlider: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Binding var value: Double
 
     let range: ClosedRange<Double>
@@ -44,32 +46,7 @@ struct TahoePillSlider: View {
                         )
                         .padding(.leading, thumbWidth / 2)
 
-                    RoundedRectangle(
-                        cornerRadius: 8,
-                        style: .continuous
-                    )
-                    .fill(
-                        colorScheme == .dark
-                            ? Color.white
-                            : Color(
-                                nsColor: .controlBackgroundColor
-                            )
-                    )
-                    .overlay(
-                        RoundedRectangle(
-                            cornerRadius: 8,
-                            style: .continuous
-                        )
-                        .stroke(
-                            Color.secondary.opacity(0.22),
-                            lineWidth: 1
-                        )
-                    )
-                    .shadow(
-                        color: Color.black.opacity(0.12),
-                        radius: 2,
-                        y: 1
-                    )
+                    thumb
                     .frame(
                         width: thumbWidth,
                         height: thumbHeight
@@ -158,6 +135,23 @@ struct TahoePillSlider: View {
             @unknown default:
                 break
             }
+        }
+    }
+
+    @ViewBuilder
+    private var thumb: some View {
+        if !reduceTransparency, contrast != .increased {
+            let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
+            shape.fill(Color.clear)
+                .glassEffect(.regular.interactive(isEnabled), in: shape)
+        } else {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(colorScheme == .dark ? Color.white : Color(nsColor: .controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(Color.secondary.opacity(0.22), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.12), radius: 2, y: 1)
         }
     }
 

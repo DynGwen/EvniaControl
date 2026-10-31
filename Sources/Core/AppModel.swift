@@ -7,9 +7,15 @@ import Foundation
 final class AppModel: ObservableObject {
     static let shared = AppModel()
 
+    // Explicit user-feedback events avoid showing a popup during startup,
+    // automatic DDC refresh, or wake recovery. Send after updating the values.
+    let controlFeedback = PassthroughSubject<DisplayControlKind, Never>()
+
     @Published private(set) var isConnected = false
     @Published private(set) var displayName = "Evnia"
     @Published private(set) var statusMessage = "Searching for the display…"
+    @Published private(set) var brightnessSupported = false
+    @Published private(set) var volumeSupported = false
 
     @Published var brightness: Int
     @Published var volume: Int
@@ -19,37 +25,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var attenuationDB: Int
     @Published private(set) var attenuationStatus: String?
 
-    @Published var keyboardControlEnabled: Bool {
-        didSet {
-            defaults.set(
-                keyboardControlEnabled,
-                forKey: Keys.keyboardEnabled
-            )
-        }
-    }
-
-    @Published var brightnessStep: Int {
-        didSet {
-            defaults.set(
-                brightnessStep,
-                forKey: Keys.brightnessStep
-            )
-        }
-    }
-
-    @Published var volumeStep: Int {
-        didSet {
-            defaults.set(
-                volumeStep,
-                forKey: Keys.volumeStep
-            )
-        }
-    }
+    let volumeStep = 5
 
     private enum Keys {
-        static let keyboardEnabled = "keyboardControlEnabled"
-        static let brightnessStep = "brightnessStep"
-        static let volumeStep = "volumeStep"
         static let attenuationDB =
             "recovery1011.attenuationDB"
         static let savedBrightness =
@@ -92,22 +70,11 @@ final class AppModel: ObservableObject {
             ? 0
             : restoredVolume
 
-        keyboardControlEnabled = storedDefaults.object(
-            forKey: Keys.keyboardEnabled
-        ) as? Bool ?? true
-
-        brightnessStep = 5
-        volumeStep = 5
-
-        // Migrate any legacy 6% values from earlier builds.
-        storedDefaults.set(
-            5,
-            forKey: Keys.brightnessStep
-        )
-        storedDefaults.set(
-            5,
-            forKey: Keys.volumeStep
-        )
+        // Keyboard control is permanent. An old saved opt-out must not
+        // disable it, and legacy/custom step values must not override 5%.
+        for key in ["keyboardControlEnabled", "brightnessStep", "volumeStep"] {
+            storedDefaults.removeObject(forKey: key)
+        }
 
         attenuationDB = Self.quantizedDB(
             storedDefaults.object(
@@ -121,6 +88,12 @@ final class AppModel: ObservableObject {
         lastAudibleVolume = restoredVolume > 0
             ? restoredVolume
             : 50
+    }
+
+    private var connectedStatusMessage: String {
+        if !brightnessSupported { return "Connected — brightness DDC unavailable" }
+        if !volumeSupported { return "Connected — volume DDC unavailable" }
+        return "Connected"
     }
 
     func start() {
@@ -143,7 +116,8 @@ final class AppModel: ObservableObject {
     }
 
     func updateKeyboardAuthorization() {
-        keyboardAuthorized = AXIsProcessTrusted()
+        let authorized = AXIsProcessTrusted()
+        if keyboardAuthorized != authorized { keyboardAuthorized = authorized }
     }
 
     func refresh() async {
@@ -151,8 +125,10 @@ final class AppModel: ObservableObject {
             let snapshot = try await driver.refresh()
 
             displayName = snapshot.display.name
+            brightnessSupported = snapshot.brightness != nil
+            volumeSupported = snapshot.volume != nil
             isConnected = true
-            statusMessage = "Connected"
+            statusMessage = connectedStatusMessage
 
             let hasSavedBrightness =
                 defaults.object(
@@ -164,7 +140,7 @@ final class AppModel: ObservableObject {
                     forKey: Keys.savedVolume
                 ) != nil
 
-            if hasSavedBrightness {
+            if brightnessSupported && hasSavedBrightness {
                 if snapshot.brightness != brightness {
                     do {
                         try await driver.setBrightness(
@@ -185,7 +161,7 @@ final class AppModel: ObservableObject {
                 )
             }
 
-            if isMuted {
+            if volumeSupported && isMuted {
                 // Mute is authoritative until the user explicitly
                 // chooses Unmute. Keep the public/UI value at zero.
                 volume = 0
@@ -203,7 +179,7 @@ final class AppModel: ObservableObject {
                     statusMessage =
                         error.localizedDescription
                 }
-            } else if hasSavedVolume {
+            } else if volumeSupported && hasSavedVolume {
                 if snapshot.volume != volume {
                     do {
                         try await driver.setVolume(
@@ -229,6 +205,8 @@ final class AppModel: ObservableObject {
             }
         } catch {
             isConnected = false
+            brightnessSupported = false
+            volumeSupported = false
             statusMessage = error.localizedDescription
         }
 
@@ -237,21 +215,28 @@ final class AppModel: ObservableObject {
     }
 
     func userSetBrightness(_ value: Int) {
+        guard isConnected && brightnessSupported else { return }
+        let previousBrightness = brightness
         brightness = clamp(value)
         persist(
             brightness,
             forKey: Keys.savedBrightness
         )
         scheduleBrightnessWrite()
+        if brightness != previousBrightness {
+            controlFeedback.send(.brightness)
+        }
     }
 
     func userSetVolume(_ value: Int) {
+        guard isConnected && volumeSupported else { return }
         guard !isMuted else {
             volumeWriteTask?.cancel()
             volume = 0
             return
         }
 
+        let previousVolume = volume
         volume = clamp(value)
         persist(
             volume,
@@ -263,24 +248,34 @@ final class AppModel: ObservableObject {
         }
 
         scheduleVolumeWrite()
+        if volume != previousVolume {
+            controlFeedback.send(.volume)
+        }
     }
 
     func changeBrightness(by delta: Int) {
+        guard isConnected && brightnessSupported else { return }
+        let previousBrightness = brightness
         brightness = clamp(brightness + delta)
         persist(
             brightness,
             forKey: Keys.savedBrightness
         )
         scheduleBrightnessWrite()
+        if brightness != previousBrightness {
+            controlFeedback.send(.brightness)
+        }
     }
 
     func changeVolume(by delta: Int) {
+        guard isConnected && volumeSupported else { return }
         guard !isMuted else {
             volumeWriteTask?.cancel()
             volume = 0
             return
         }
 
+        let previousVolume = volume
         volume = clamp(volume + delta)
 
         if volume > 0 {
@@ -293,9 +288,13 @@ final class AppModel: ObservableObject {
         )
 
         scheduleVolumeWrite()
+        if volume != previousVolume {
+            controlFeedback.send(.volume)
+        }
     }
 
     func toggleMute() {
+        guard isConnected && volumeSupported else { return }
         let targetMuted = !isMuted
 
         if targetMuted {
@@ -315,6 +314,7 @@ final class AppModel: ObservableObject {
             volume = 0
             isMuted = true
             persistMuteState()
+            controlFeedback.send(.volume)
 
             Task {
                 // Try the monitor's real mute command first.
@@ -343,6 +343,8 @@ final class AppModel: ObservableObject {
             forKey: Keys.savedVolume
         )
 
+        controlFeedback.send(.volume)
+
         Task {
             // Clear hardware mute if the display supports it, then
             // restore the desired volume in all cases.
@@ -350,7 +352,7 @@ final class AppModel: ObservableObject {
 
             do {
                 try await driver.setVolume(volume)
-                statusMessage = "Connected"
+                statusMessage = connectedStatusMessage
             } catch {
                 statusMessage =
                     error.localizedDescription
@@ -396,9 +398,7 @@ final class AppModel: ObservableObject {
         audioRecoveryTask?.cancel()
 
         audioRecoveryTask = Task { @MainActor in
-            // Same initial wake delay used by the working 0.2.7
-            // implementation. Let Core Audio rebuild its device list
-            // before touching the tap.
+            // Let Core Audio rebuild its device list before touching the tap.
             do {
                 try await Task.sleep(
                     nanoseconds: 750_000_000
@@ -417,8 +417,7 @@ final class AppModel: ObservableObject {
                 return
             }
 
-            // Critical change from 1.0.21/1.0.22:
-            // tear down the old Core Audio tap only AFTER wake.
+            // Tear down the old Core Audio tap only after wake.
             AppModel.shared.audio
                 .prepareForWakeRestart()
 
@@ -516,7 +515,9 @@ final class AppModel: ObservableObject {
 
             do {
                 try await driver.setBrightness(value)
-                statusMessage = "Connected"
+                statusMessage = connectedStatusMessage
+            } catch is CancellationError {
+                return
             } catch {
                 statusMessage = error.localizedDescription
             }
@@ -537,7 +538,9 @@ final class AppModel: ObservableObject {
 
             do {
                 try await driver.setVolume(value)
-                statusMessage = "Connected"
+                statusMessage = connectedStatusMessage
+            } catch is CancellationError {
+                return
             } catch {
                 statusMessage = error.localizedDescription
             }

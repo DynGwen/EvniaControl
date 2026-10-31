@@ -14,6 +14,7 @@ struct MenuContentView: View {
                 icon: "sun.max.fill",
                 title: "Brightness",
                 value: model.brightness,
+                isEnabled: model.isConnected && model.brightnessSupported,
                 binding: Binding(
                     get: {
                         Double(model.brightness)
@@ -30,6 +31,7 @@ struct MenuContentView: View {
                     : "speaker.wave.2.fill",
                 title: "Volume",
                 value: model.volume,
+                isEnabled: model.isConnected && model.volumeSupported && !model.isMuted,
                 binding: Binding(
                     get: {
                         Double(model.volume)
@@ -53,6 +55,7 @@ struct MenuContentView: View {
                             : "speaker.slash"
                     )
                 }
+                .disabled(!model.isConnected || !model.volumeSupported)
             }
 
             if !model.keyboardAuthorized {
@@ -60,7 +63,7 @@ struct MenuContentView: View {
 
                 VStack(alignment: .leading, spacing: 7) {
                     Label(
-                        "Keyboard permission required",
+                        "Media-key permission required",
                         systemImage: "keyboard.badge.ellipsis"
                     )
                     .font(.callout.bold())
@@ -68,7 +71,7 @@ struct MenuContentView: View {
                     Text(
                         "Allow Evnia Control in " +
                         "Privacy & Security > Accessibility " +
-                        "to use the Magic Keyboard media keys."
+                        "to use the sun and volume keys."
                     )
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -139,6 +142,7 @@ struct MenuContentView: View {
         icon: String,
         title: String,
         value: Int,
+        isEnabled: Bool,
         binding: Binding<Double>
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -154,8 +158,10 @@ struct MenuContentView: View {
                 value: binding,
                 range: 0...100,
                 step: 1,
-                isEnabled: model.isConnected
+                isEnabled: isEnabled
             )
+            .accessibilityLabel(title)
+            .accessibilityValue("\(value) percent")
         }
     }
 }

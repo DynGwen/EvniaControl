@@ -77,9 +77,9 @@ final class OptionsWindowController: NSWindowController {
             height: AttenuationControlView.preferredHeight
         )
 
-        attenuationView.onChange = { value in
+        attenuationView.onChange = { [weak self] value in
             AppModel.shared.setAttenuationDB(value)
-            self.refreshStatus()
+            self?.refreshStatus()
         }
 
         statusLabel.frame = NSRect(

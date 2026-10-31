@@ -78,14 +78,6 @@ final class AudioController {
             return
         }
 
-        guard #available(macOS 14.2, *) else {
-            throw audioError(
-                code: 1,
-                message:
-                    "macOS 14.2 or later is required for audio attenuation."
-            )
-        }
-
         guard let output =
             try AudioDevices.defaultOutput()
         else {
@@ -104,9 +96,7 @@ final class AudioController {
     }
 
     func prepareForWakeRestart() {
-        // Important: do this AFTER wake, never while the display audio
-        // device is disappearing. This follows the lifecycle used by
-        // the working 0.2.7 implementation: full stop, then rebuild.
+        // Stop and rebuild after wake, once the display audio device returns.
         stopEngine(
             resetPreferredOutput: false,
             resetProcessorGain: false
@@ -119,14 +109,6 @@ final class AudioController {
         guard decibels < 0 else {
             stop()
             return true
-        }
-
-        guard #available(macOS 14.2, *) else {
-            throw audioError(
-                code: 1,
-                message:
-                    "macOS 14.2 or later is required for audio attenuation."
-            )
         }
 
         guard let preferredOutputUID else {

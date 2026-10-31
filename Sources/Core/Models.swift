@@ -1,5 +1,10 @@
 import Foundation
 
+enum DisplayControlKind: Equatable, Sendable {
+    case brightness
+    case volume
+}
+
 struct DisplayDescriptor: Equatable, Sendable {
     let index: Int
     let name: String

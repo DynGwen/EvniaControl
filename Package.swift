@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "EvniaControl",
-    platforms: [.macOS("14.2")],
+    platforms: [.macOS("27.0")],
     products: [
         .executable(
             name: "EvniaControl",
@@ -28,6 +28,7 @@ let package = Package(
             path: "Sources",
             linkerSettings: [
                 .linkedFramework("AppKit"),
+                .linkedFramework("Carbon"),
                 .linkedFramework("ApplicationServices"),
                 .linkedFramework("CoreAudio"),
                 .linkedFramework("CoreGraphics"),

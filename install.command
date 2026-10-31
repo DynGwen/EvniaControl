@@ -22,7 +22,7 @@ fail() {
 }
 
 if [[ "$(uname -m)" != "arm64" ]]; then
-    fail "Evnia Control 1.0.26 requires an Apple Silicon Mac."
+    fail "Evnia Control 1.0.34 requires an Apple Silicon Mac."
 fi
 
 if ! xcode-select -p >/dev/null 2>&1; then
@@ -32,11 +32,28 @@ if ! xcode-select -p >/dev/null 2>&1; then
     exit 0
 fi
 
-log "Stopping the previous version..."
-pkill -x "${APP_NAME}" >/dev/null 2>&1 || true
-sleep 1
+MACOS_VERSION="$(sw_vers -productVersion)"
+if (( ${MACOS_VERSION%%.*} < 27 )); then
+    fail "This build targets macOS 27 or newer."
+fi
 
-rm -rf "${WORK_DIR}"
+SDK_VERSION="$(xcrun --sdk macosx --show-sdk-version)"
+if (( ${SDK_VERSION%%.*} < 27 )); then
+    fail "This build requires the macOS 27 SDK or newer. Update Xcode or Command Line Tools."
+fi
+
+log "Cleaning retired source files and build caches..."
+# Exact retired filenames only: also handles extraction over an older archive.
+rm -f -- \
+    "${ROOT_DIR}/Sources/Core/BrightnessShortcut.swift" \
+    "${ROOT_DIR}/Sources/Core/BrightnessFunctionKey.swift" \
+    "${ROOT_DIR}/Sources/Services/GlobalBrightnessShortcuts.swift" \
+    "${ROOT_DIR}/Sources/Services/KeyboardDiagnostics.swift" \
+    "${ROOT_DIR}/Sources/UI/VolumePopupView.swift" \
+    "${ROOT_DIR}/Sources/UI/TahoeWindowCorners.swift" \
+    "${ROOT_DIR}/Tests/KeyboardEventRouterTests.swift"
+rmdir "${ROOT_DIR}/Tests" 2>/dev/null || true
+rm -rf -- "${ROOT_DIR}/.build" "${WORK_DIR}"
 mkdir -p "${VENDOR_DIR}"
 
 log "Building Evnia Control and the audio engine..."
@@ -44,6 +61,9 @@ cd "${ROOT_DIR}"
 swift build \
     -c release \
     --product "${PRODUCT_NAME}"
+
+log "Checking keyboard routing..."
+/bin/zsh "${ROOT_DIR}/check-keyboard.command"
 
 EXECUTABLE_PATH="$(
     swift build \
@@ -101,6 +121,10 @@ codesign \
     --sign - \
     "${APP_BUNDLE}" >/dev/null
 
+log "Stopping the previous version..."
+pkill -x "${APP_NAME}" >/dev/null 2>&1 || true
+sleep 1
+
 log "Installing in /Applications..."
 osascript - "${APP_BUNDLE}" "${INSTALL_APP}" <<'APPLESCRIPT'
 on run argv
@@ -124,6 +148,7 @@ fi
 log "Installation complete: ${INSTALL_APP}"
 log "Launching..."
 open "${INSTALL_APP}"
+rm -rf -- "${WORK_DIR}"
 
 printf "\n"
 printf "Audio attenuation may require System Audio Recording permission "

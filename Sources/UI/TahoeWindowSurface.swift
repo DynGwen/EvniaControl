@@ -21,38 +21,13 @@ enum TahoeWindowAppearance {
         contentView: NSView,
         roundsOwnSurface: Bool = true
     ) -> NSView {
-        if #available(macOS 26.0, *) {
-            let glassView = NSGlassEffectView()
-            glassView.style = .regular
-
-            if roundsOwnSurface {
-                glassView.cornerRadius = cornerRadius
-            }
-
-            glassView.contentView = contentView
-            return glassView
-        }
-
-        let effectView = NSVisualEffectView()
-        effectView.material = .windowBackground
-        effectView.blendingMode = .behindWindow
-        effectView.state = .followsWindowActiveState
-
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        effectView.addSubview(contentView)
-
-        NSLayoutConstraint.activate([
-            contentView.leadingAnchor.constraint(equalTo: effectView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: effectView.trailingAnchor),
-            contentView.topAnchor.constraint(equalTo: effectView.topAnchor),
-            contentView.bottomAnchor.constraint(equalTo: effectView.bottomAnchor),
-        ])
-
+        let glassView = NSGlassEffectView()
+        glassView.style = .regular
         if roundsOwnSurface {
-            applyCorners(to: effectView)
+            glassView.cornerRadius = cornerRadius
         }
-
-        return effectView
+        glassView.contentView = contentView
+        return glassView
     }
 
     private static func applyCorners(to view: NSView?) {
@@ -95,9 +70,21 @@ struct TahoeWindowBridge: NSViewRepresentable {
 }
 
 private struct TahoeWindowSurfaceModifier: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
     @ViewBuilder
     func body(content: Content) -> some View {
-        if #available(macOS 26.0, *) {
+        if reduceTransparency {
+            content
+                .background(
+                    Color(nsColor: .windowBackgroundColor),
+                    in: RoundedRectangle(
+                        cornerRadius: TahoeWindowAppearance.cornerRadius,
+                        style: .continuous
+                    )
+                )
+                .background(TahoeWindowBridge().frame(width: 0, height: 0))
+        } else {
             let shape = RoundedRectangle(
                 cornerRadius: TahoeWindowAppearance.cornerRadius,
                 style: .continuous
@@ -109,26 +96,6 @@ private struct TahoeWindowSurfaceModifier: ViewModifier {
                     in: shape
                 )
                 .clipShape(shape)
-                .compositingGroup()
-                .background(
-                    TahoeWindowBridge()
-                        .frame(width: 0, height: 0)
-                )
-        } else {
-            content
-                .background(
-                    .regularMaterial,
-                    in: RoundedRectangle(
-                        cornerRadius: TahoeWindowAppearance.cornerRadius,
-                        style: .continuous
-                    )
-                )
-                .clipShape(
-                    RoundedRectangle(
-                        cornerRadius: TahoeWindowAppearance.cornerRadius,
-                        style: .continuous
-                    )
-                )
                 .background(
                     TahoeWindowBridge()
                         .frame(width: 0, height: 0)

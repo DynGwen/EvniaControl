@@ -62,6 +62,7 @@ actor M1DDCDriver {
     }
 
     func setBrightness(_ value: Int) throws {
+        try Task.checkCancellation()
         try write(
             "luminance",
             value: clamped(value),
@@ -70,6 +71,7 @@ actor M1DDCDriver {
     }
 
     func setVolume(_ value: Int) throws {
+        try Task.checkCancellation()
         try write(
             "volume",
             value: clamped(value),

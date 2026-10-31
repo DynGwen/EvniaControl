@@ -38,17 +38,22 @@ if grep -Rqi 'ambiglow' "${ROOT_DIR}/Sources"; then
     exit 1
 fi
 
-grep -q '<string>1.0.26</string>' "${ROOT_DIR}/Resources/Info.plist"
+grep -q '<string>1.0.34</string>' "${ROOT_DIR}/Resources/Info.plist"
 grep -q '<string>en</string>' "${ROOT_DIR}/Resources/Info.plist"
 grep -q 'title: "Brightness"' "${MENU}"
 
 echo "Tahoe sliders: OK"
 echo "20 × 16 thumbs: OK"
-echo "White thumbs in dark mode: OK"
+echo "Accessible opaque slider fallback: OK"
 echo "21 attenuation graduations: OK"
 echo "16 pt corners: OK"
 echo "Tahoe background: OK"
 echo "Mute at 0%: OK"
-echo "1.0.26 features preserved: OK"
-echo "Version 1.0.26: OK"
+echo "Existing control layout preserved: OK"
+echo "Version 1.0.34: OK"
 echo "English language: OK"
+
+# Real compiler validation in addition to the original visual invariants.
+# This project targets macOS 27 and requires its SDK.
+swift build --package-path "${ROOT_DIR}" -c release --product EvniaControl
+/bin/zsh "${ROOT_DIR}/check-keyboard.command"

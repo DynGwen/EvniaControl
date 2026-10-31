@@ -1,12 +1,17 @@
 import AppKit
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var statusItemController: StatusItemController?
+
     func applicationDidFinishLaunching(
         _ notification: Notification
     ) {
         Task { @MainActor in
+            statusItemController = StatusItemController(model: .shared)
             LoginItemManager.shared.ensureEnabled()
             AppModel.shared.start()
+            BrightnessFunctionKeys.shared.start()
             MediaKeyMonitor.shared.start()
         }
 
@@ -35,6 +40,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    func applicationWillTerminate(_ notification: Notification) {
+        BrightnessFunctionKeys.shared.stop()
+        MediaKeyMonitor.shared.stop()
+        statusItemController?.stop()
+        statusItemController = nil
+    }
+
     @objc
     private func screenConfigurationChanged() {
         Task { @MainActor in
@@ -50,6 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             AppModel.shared.recoverAfterScreenWake()
             MediaKeyMonitor.shared.restartIfNeeded()
+            BrightnessFunctionKeys.shared.restartIfNeeded()
         }
     }
 
@@ -58,6 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             AppModel.shared.recoverAfterScreenWake()
             MediaKeyMonitor.shared.restartIfNeeded()
+            BrightnessFunctionKeys.shared.restartIfNeeded()
         }
     }
 }

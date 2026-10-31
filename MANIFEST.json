@@ -1,12 +1,57 @@
 {
   "name": "Evnia Control",
-  "version": "1.0.26 English",
-  "canonical_state": "validated 1.0.51 state renumbered as 1.0.26, with dark-mode slider thumb contrast fix",
-  "base_code": "1.0.0",
-  "functional_behavior_changed": false,
-  "visual_behavior_changed": true,
-  "language_only_difference_between_archives": true,
-  "dark_mode_slider_thumbs": "white",
+  "version": "1.0.34",
+  "deployment_minimum_macos": "27.0",
+  "build_sdk_minimum": "27.0",
+  "architecture": "Apple Silicon",
+  "brightness": {
+    "keys": "native sun keys and bare F1/F2",
+    "step_percent": 5,
+    "method": "m1ddc DDC/CI luminance",
+    "requires_successful_ddc_read": true,
+    "registered_function_keys": 2,
+    "handler_target": "GetApplicationEventTarget",
+    "registration_target": "GetEventDispatcherTarget",
+    "event_tap_preference": [
+      "HID for existing volume and F1/F2",
+      "session for native brightness only; full session fallback if HID unavailable"
+    ],
+    "native_key_codes": {
+      "decrease": 145,
+      "increase": 144
+    },
+    "native_key_reception": "keyDown/keyUp via primary HID and brightness-only session tap",
+    "reference": "https://github.com/Hammerspoon/hammerspoon/issues/706"
+  },
+  "keyboard_controls": "always enabled; media keys require Accessibility access",
+  "volume": {
+    "step_percent": 5,
+    "fine_step_percent": 1,
+    "fine_modifiers": "Option+Shift"
+  },
+  "popup": {
+    "controls": [
+      "brightness",
+      "volume"
+    ],
+    "anchor": "status item",
+    "auto_dismiss_seconds": 2,
+    "pause_on_hover_or_drag": true,
+    "takes_keyboard_focus": false,
+    "hide_while_main_menu_open": true
+  },
+  "appearance": "native Liquid Glass; existing main-menu layout; accessible opaque slider fallback",
+  "cleanup": [
+    "keyboard diagnostics",
+    "additional brightness shortcut combinations",
+    "unused corner helper",
+    "unreachable old-OS branches",
+    "retired source files and build caches during installation",
+    "known older per-user application copy",
+    "temporary installer staging after launch"
+  ],
+  "preserves_saved_settings": true,
+  "keyboard_checks": 14,
   "core_audio_tap_kit": "from 0.1.0",
-  "ambiglow": "not managed"
+  "validation": "Shell, cleanup and source integration checked on Linux; native compilation and Magic Keyboard Lightning physical input require validation on macOS 27"
 }
