@@ -150,7 +150,8 @@ struct MenuContentView: View {
                 Spacer()
                 Text("\(value)%")
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color(nsColor: .labelColor))
             }
 
             TahoePillSlider(

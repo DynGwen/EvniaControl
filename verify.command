@@ -15,6 +15,21 @@ grep -q 'thumbHeight: CGFloat = 16' "${SLIDER}"
 grep -q 'Color.accentColor' "${SLIDER}"
 grep -Fq '@Environment(\.colorScheme)' "${SLIDER}"
 grep -q 'Color.white' "${SLIDER}"
+# Thumb must be solid, including when the system allows transparency.
+# Guard against the old dark-mode charcoal thumb regressing.
+grep -Fq '.fill(Color.white)' "${SLIDER}"
+if grep -Fq 'Color(red: 0.25, green: 0.27, blue: 0.30)' "${SLIDER}"; then
+    echo "FAIL: Slider thumb still switches to charcoal in dark mode"
+    exit 1
+fi
+if grep -q '\.glassEffect(' "${SLIDER}"; then
+    echo "FAIL: Slider thumb still uses translucent Liquid Glass"
+    exit 1
+fi
+
+# Full-strength, system-adaptive percentage text in both control panels.
+grep -Fq '.foregroundStyle(Color(nsColor: .labelColor))' "${MENU}"
+grep -Fq '.foregroundStyle(Color(nsColor: .labelColor))' "${ROOT_DIR}/Sources/UI/ControlPopupView.swift"
 
 grep -q 'TahoePillSlider(' "${MENU}"
 grep -q 'graduationCount: 21' "${ATTEN}"
@@ -38,19 +53,21 @@ if grep -Rqi 'ambiglow' "${ROOT_DIR}/Sources"; then
     exit 1
 fi
 
-grep -q '<string>1.0.35</string>' "${ROOT_DIR}/Resources/Info.plist"
+grep -q '<string>1.0.37</string>' "${ROOT_DIR}/Resources/Info.plist"
 grep -q '<string>en</string>' "${ROOT_DIR}/Resources/Info.plist"
 grep -q 'title: L10n.brightness' "${MENU}"
+grep -q 'static let languageCode = "en"' "${ROOT_DIR}/Sources/Core/L10n.swift"
 
 echo "Tahoe sliders: OK"
 echo "20 × 16 thumbs: OK"
-echo "Accessible opaque slider fallback: OK"
+echo "White opaque slider thumbs in both modes: OK"
+echo "Opaque percentage labels: OK"
 echo "21 attenuation graduations: OK"
 echo "16 pt corners: OK"
 echo "Tahoe background: OK"
 echo "Mute at 0%: OK"
 echo "Existing control layout preserved: OK"
-echo "Version 1.0.35: OK"
+echo "Version 1.0.37: OK"
 echo "English language: OK"
 
 # Real compiler validation in addition to the original visual invariants.

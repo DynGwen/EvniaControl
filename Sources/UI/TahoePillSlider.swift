@@ -2,8 +2,6 @@ import SwiftUI
 
 struct TahoePillSlider: View {
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.colorSchemeContrast) private var contrast
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Binding var value: Double
 
     let range: ClosedRange<Double>
@@ -86,7 +84,6 @@ struct TahoePillSlider: View {
                             value = quantize(rawValue)
                         }
                 )
-                .opacity(isEnabled ? 1 : 0.55)
             }
             .frame(height: thumbHeight)
 
@@ -138,21 +135,22 @@ struct TahoePillSlider: View {
         }
     }
 
-    @ViewBuilder
+    // Opaque, always-white thumb in both appearance modes. Keep Liquid Glass
+    // on the window, never on the draggable handle.
     private var thumb: some View {
-        if !reduceTransparency, contrast != .increased {
-            let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
-            shape.fill(Color.clear)
-                .glassEffect(.regular.interactive(isEnabled), in: shape)
-        } else {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(colorScheme == .dark ? Color.white : Color(nsColor: .controlBackgroundColor))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(Color.secondary.opacity(0.22), lineWidth: 1)
+        let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
+
+        return shape
+            .fill(Color.white)
+            .overlay(
+                shape.strokeBorder(
+                    colorScheme == .dark
+                        ? Color.white.opacity(0.52)
+                        : Color.black.opacity(0.20),
+                    lineWidth: 1
                 )
-                .shadow(color: Color.black.opacity(0.12), radius: 2, y: 1)
-        }
+            )
+            .shadow(color: Color.black.opacity(0.16), radius: 2, y: 1)
     }
 
     private func normalized(

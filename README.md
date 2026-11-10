@@ -1,32 +1,34 @@
-# Evnia Control 1.0.35
+# Evnia Control 1.0.37 — English edition
 
-Menu-bar brightness, volume and audio attenuation for Philips Evnia displays
-on Apple Silicon, using the supplied project’s Liquid Glass interface.
+Menu-bar brightness, volume and audio attenuation controls for Philips Evnia
+displays on Apple Silicon Macs.
 
-## Version 1.0.35
+## Display fix
 
-- First single left click on the status icon opens the main panel.
-- Second click on the same icon closes the panel and keeps the application running.
-- Exactly one action is handled on mouse-down, with no toggle on release.
-- Losing key-window status during an icon press no longer closes and reopens the panel.
-- Both mouse monitors identify the icon’s screen bounds, including windowless events.
-- Outside clicks dismiss immediately; Escape and application switching also dismiss the panel.
-- Options… explicitly closes the main panel before showing settings.
-- English interface, accessibility text, built-in messages and installer.
+- The slider **thumbs are fully opaque**, including when Liquid Glass is enabled:
+  solid white in both light and dark modes.
+- Brightness and volume **percentages** use the primary label color and medium
+  weight in the main panel and feedback popups instead of secondary faded text.
+- The audio attenuation slider also benefits from the opaque thumb.
+- Window Liquid Glass and all control behavior are preserved.
 
-Saved settings and brightness/volume controls remain shared with the French
-edition. Brightness uses 5-point steps; volume uses 5% steps, or 1% with
-Option+Shift. Feedback popups keep their 2-second timeout and pause on
-hover/drag. Audio attenuation ranges from −60 to 0 dB in 3 dB steps.
+## Separate English edition
 
-## Installation and verification
+Interface strings, built-in messages, VoiceOver labels and installer messages
+are English, even if macOS is set to French. OS and dependency messages may
+still use the operating system's own language.
 
-Extract and run `install.command`. Existing requirements are retained:
-Apple Silicon, macOS 27+, macOS 27+ SDK and Internet. See `INSTALLATION_EN.md`.
+This is a **separate English source distribution** from the French edition.
+Both distributions install `/Applications/Evnia Control.app`: installing one
+replaces the other while preserving saved settings. They should not run at
+the same time, because both control the same display.
 
-Source code and an installer are included; no precompiled macOS application
-is included. Checks performed on Linux: zsh script syntax, bundle metadata,
-translation coverage, installer control flow with mocked macOS tools, and
-archive integrity. Native compilation, all 14 Swift keyboard routing checks,
-and AppKit/hardware behavior must still be validated on a Mac using
-`verify.command` and `MANUAL_TESTS_EN.md`.
+## Installation
+
+Extract into a fresh folder and double-click `install.command`. Requirements:
+Apple Silicon, macOS 27+, macOS 27+ SDK, developer tools and Internet access.
+See `INSTALLATION_EN.md`.
+
+This archive includes sources and an installer, **not a prebuilt Mac app**.
+On a compatible Mac, run `verify.command` for native compilation and checks;
+see `MANUAL_TESTS_EN.md` for hardware/UI validation.

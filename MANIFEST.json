@@ -1,6 +1,6 @@
 {
   "name": "Evnia Control",
-  "version": "1.0.35",
+  "version": "1.0.37",
   "deployment_minimum_macos": "27.0",
   "build_sdk_minimum": "27.0",
   "architecture": "Apple Silicon",
@@ -40,7 +40,7 @@
     "takes_keyboard_focus": false,
     "hide_while_main_menu_open": true
   },
-  "appearance": "native Liquid Glass; existing main-menu layout; accessible opaque slider fallback",
+  "appearance": "Liquid Glass window, solid white opaque slider thumbs in light and dark modes, primary-color percentage labels",
   "cleanup": [
     "keyboard diagnostics",
     "additional brightness shortcut combinations",
@@ -53,7 +53,7 @@
   "preserves_saved_settings": true,
   "keyboard_checks": 14,
   "core_audio_tap_kit": "from 0.1.0",
-  "validation": "Prepared on Linux without Swift/AppKit/macOS SDK. Shell syntax, bundle metadata, localization coverage, installer control flow with mocked macOS tools, and archive integrity checked. Native release compilation, fourteen keyboard routing checks, menu-bar mouse/focus interactions, and monitor/audio hardware require macOS 27 validation.",
+  "validation": "Static checks on Linux. Swift/AppKit build and hardware behavior must be verified on target Apple Silicon macOS 27+ Mac.",
   "menu_bar": {
     "first_left_click": "open main panel",
     "second_left_click": "close main panel, keep app running",
@@ -69,5 +69,5 @@
     "global_mouse_dismissal": "synchronous on the main actor"
   },
   "language": "en",
-  "distribution": "source archive with local macOS build/install script; not a precompiled binary"
+  "distribution": "separate EN source edition with localized install script; compiled macOS app not included"
 }
