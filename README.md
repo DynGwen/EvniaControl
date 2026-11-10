@@ -1,4 +1,4 @@
-# Evnia Control 1.0.37 — English edition
+# Evnia Control 1.0.37
 
 Menu-bar brightness, volume and audio attenuation controls for Philips Evnia
 displays on Apple Silicon Macs.
