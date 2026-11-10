@@ -12,17 +12,6 @@ displays on Apple Silicon Macs.
 - The audio attenuation slider also benefits from the opaque thumb.
 - Window Liquid Glass and all control behavior are preserved.
 
-## Separate English edition
-
-Interface strings, built-in messages, VoiceOver labels and installer messages
-are English, even if macOS is set to French. OS and dependency messages may
-still use the operating system's own language.
-
-This is a **separate English source distribution** from the French edition.
-Both distributions install `/Applications/Evnia Control.app`: installing one
-replaces the other while preserving saved settings. They should not run at
-the same time, because both control the same display.
-
 ## Installation
 
 Extract into a fresh folder and double-click `install.command`. Requirements:
